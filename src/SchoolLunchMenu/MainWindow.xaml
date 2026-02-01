@@ -1,0 +1,317 @@
+<Window x:Class="SchoolLunchMenu.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SchoolLunchMenu.ViewModels"
+        mc:Ignorable="d"
+        Title="School Lunch Menu"
+        Icon="Assets/logo.ico"
+        Height="700" Width="950"
+        MinHeight="500" MinWidth="750"
+        WindowStartupLocation="CenterScreen"
+        AllowDrop="True"
+        DragOver="OnDragOver"
+        Drop="OnDrop"
+        d:DataContext="{d:DesignInstance vm:MainViewModel}">
+
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="{x:Static ApplicationCommands.Close}" />
+    </Window.InputBindings>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static ApplicationCommands.Close}" Executed="OnClose" />
+    </Window.CommandBindings>
+
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left sidebar: Settings panel -->
+        <Border Grid.Column="0" BorderBrush="#DEE2E6" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,8,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- School Lookup section -->
+                    <TextBlock Text="School Lookup" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+
+                    <TextBlock Text="Identifier Code" FontSize="11" Foreground="#6c757d" Margin="0,0,0,2" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding IdentifierCode, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Enter the family menu identifier code (e.g., YVAM38)"
+                                 Margin="0,0,4,0" />
+                        <Button Grid.Column="1"
+                                Content="Look Up"
+                                Command="{Binding LookupIdentifierCommand}"
+                                ToolTip="Look up district and buildings for this identifier"
+                                Padding="8,4" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding DistrictName}"
+                               FontSize="11" Foreground="#6c757d"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding DistrictName, Converter={StaticResource NullToCollapsedConverter}, FallbackValue=Collapsed}"
+                               Margin="0,0,0,4" />
+
+                    <StackPanel Visibility="{Binding HasBuildings, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Building" FontSize="11" Foreground="#6c757d" Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding AvailableBuildings}"
+                                  SelectedItem="{Binding SelectedBuilding}"
+                                  DisplayMemberPath="Name"
+                                  ToolTip="Select the school building"
+                                  Margin="0,0,0,4" />
+                    </StackPanel>
+
+                    <Separator Margin="0,4,0,10" />
+
+                    <!-- Month/Year selection -->
+                    <TextBlock Text="Month &amp; Year" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+
+                    <ComboBox x:Name="MonthCombo"
+                              TabIndex="0"
+                              ItemsSource="{Binding AvailableMonths}"
+                              SelectedValue="{Binding SelectedMonth}"
+                              SelectedValuePath="Number"
+                              DisplayMemberPath="Name"
+                              ToolTip="Select the month to display"
+                              Margin="0,0,0,4" />
+
+                    <ComboBox TabIndex="1"
+                              ItemsSource="{Binding AvailableYears}"
+                              SelectedItem="{Binding SelectedYear}"
+                              ToolTip="Select the year to display"
+                              Margin="0,0,0,10" />
+
+                    <!-- Serving Session -->
+                    <StackPanel Visibility="{Binding HasSessions, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Serving Session" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding AvailableSessions}"
+                                  SelectedItem="{Binding SelectedSession}"
+                                  ToolTip="Select the serving session (e.g., Lunch, Breakfast)"
+                                  Margin="0,0,0,10" />
+                    </StackPanel>
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Calendar Theme -->
+                    <TextBlock Text="Calendar Theme" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                    <ComboBox ItemsSource="{Binding ThemeListItems}"
+                              SelectedItem="{Binding SelectedThemeItem}"
+                              ToolTip="Select a visual theme for the generated calendar"
+                              Margin="0,0,0,10">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                    <Setter Property="Foreground" Value="#6c757d" />
+                                                    <Setter Property="FontSize" Value="11" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                        <Setter Property="IsHitTestVisible" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                    </ComboBox>
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Allergen selection (collapsible) -->
+                    <Expander IsExpanded="{Binding IsAllergenExpanded}" Margin="0,0,0,4">
+                        <Expander.Header>
+                            <TextBlock Text="Allergen Filter" FontWeight="Bold" FontSize="13" />
+                        </Expander.Header>
+                        <StackPanel Margin="0,6,0,0">
+                            <TextBlock Text="Items containing selected allergens will be shown in strikethrough."
+                                       TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding AvailableAllergens}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding Name}"
+                                                  IsChecked="{Binding IsSelected}"
+                                                  Margin="0,2"
+                                                  ToolTip="{Binding Name, StringFormat='Filter out items containing {0}'}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Expander>
+                    <TextBlock Text="{Binding AllergenSummary}"
+                               FontSize="11" Foreground="#6c757d"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,10" />
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Not Preferred Foods -->
+                    <StackPanel Visibility="{Binding HasRecipes, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Not Preferred Foods" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                        <TextBlock Text="Checked items are allergen-free but won't count as safe options. Type to search."
+                                   TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+
+                        <TextBox Text="{Binding RecipeSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Search not-preferred foods by name"
+                                 Margin="0,0,0,4" />
+
+                        <ItemsControl ItemsSource="{Binding FilteredRecipes}" Margin="0,0,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}"
+                                              IsChecked="{Binding IsNotPreferred}"
+                                              Margin="0,2"
+                                              ToolTip="{Binding Name, StringFormat='Mark {0} as not preferred'}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Separator Margin="0,0,0,10" />
+                    </StackPanel>
+
+                    <!-- Favorite Foods -->
+                    <StackPanel Visibility="{Binding HasRecipes, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <TextBlock Text="Favorite Foods" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                        <TextBlock Text="Starred items get highlighted on the calendar. Type to search."
+                                   TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+
+                        <TextBox Text="{Binding FavoriteSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Search favorite foods by name"
+                                 Margin="0,0,0,4" />
+
+                        <ItemsControl ItemsSource="{Binding FilteredFavorites}" Margin="0,0,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsFavorite}" Margin="0,2"
+                                              ToolTip="{Binding Name, StringFormat='Mark {0} as a favorite'}">
+                                        <CheckBox.Content>
+                                            <TextBlock Text="{Binding Name}" />
+                                        </CheckBox.Content>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Separator Margin="0,0,0,10" />
+                    </StackPanel>
+
+                    <!-- From Home Days -->
+                    <StackPanel Visibility="{Binding HasSessions, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <TextBlock Text="From Home Days" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                        <TextBlock Text="Force 🏠 From Home badge on selected weekdays."
+                                   TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+                        <ItemsControl ItemsSource="{Binding ForcedHomeDays}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding DisplayName}"
+                                              IsChecked="{Binding IsForced}"
+                                              Margin="0,2"
+                                              ToolTip="{Binding DisplayName, StringFormat='Force From Home badge on {0}s'}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Action buttons -->
+                    <Button TabIndex="4"
+                            Content="_Fetch from API"
+                            Command="{Binding FetchFromApiCommand}"
+                            IsDefault="True"
+                            ToolTip="Fetch menu data from the LINQ Connect API (Enter)"
+                            Padding="8,6" Margin="0,0,0,6" />
+
+                    <Button TabIndex="5"
+                            Content="_Load from HAR"
+                            Command="{Binding LoadFromHarCommand}"
+                            ToolTip="Load menu data from a saved HAR file for offline use"
+                            Padding="8,6" Margin="0,0,0,6" />
+
+                    <Button TabIndex="6"
+                            Content="_Generate Calendar"
+                            Command="{Binding GenerateCalendarCommand}"
+                            ToolTip="Generate and open the printable HTML calendar"
+                            Padding="8,6"
+                            FontWeight="Bold"
+                            Background="#28a745"
+                            Foreground="White" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Right side: Preview and status -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- WebBrowser preview -->
+            <Border Grid.Row="0" BorderBrush="#DEE2E6" BorderThickness="1" CornerRadius="4">
+                <Grid>
+                    <TextBlock Text="Calendar preview will appear here after generation."
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#ADB5BD"
+                               FontSize="14"
+                               Visibility="{Binding GeneratedHtml, Converter={StaticResource NullToVisibleConverter}, FallbackValue=Visible}" />
+                    <WebBrowser x:Name="PreviewBrowser"
+                                Visibility="{Binding GeneratedHtml, Converter={StaticResource NullToCollapsedConverter}, FallbackValue=Collapsed}" />
+                </Grid>
+            </Border>
+
+            <!-- Status bar -->
+            <Border Grid.Row="1" Background="#F8F9FA" CornerRadius="4" Padding="8,6" Margin="0,6,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ProgressBar Grid.Column="0"
+                                 IsIndeterminate="{Binding IsBusy}"
+                                 Width="80" Height="12"
+                                 Margin="0,0,8,0"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibleConverter}}" />
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding StatusText}"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               ToolTip="{Binding StatusText}" />
+
+                    <Button Grid.Column="2"
+                            Content="Open in Browser"
+                            Command="{Binding OpenInBrowserCommand}"
+                            ToolTip="Open the generated calendar in the default browser"
+                            Padding="8,4"
+                            Margin="8,0,0,0"
+                            Background="#28a745"
+                            Foreground="White"
+                            Visibility="{Binding GeneratedHtmlPath, Converter={StaticResource NullToCollapsedConverter}, FallbackValue=Collapsed}" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
