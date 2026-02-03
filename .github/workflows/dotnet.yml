@@ -29,7 +29,7 @@ jobs:
         run: dotnet build src/SchoolLunchMenu/SchoolLunchMenu.csproj --configuration ${{ matrix.configuration }} --no-restore
 
       - name: Publish
-        run: dotnet publish src/SchoolLunchMenu/SchoolLunchMenu.csproj --configuration ${{ matrix.configuration }} --no-build --self-contained -r win-x64 -o publish/${{ matrix.configuration }}
+        run: dotnet publish src/SchoolLunchMenu/SchoolLunchMenu.csproj --configuration ${{ matrix.configuration }} --self-contained -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/${{ matrix.configuration }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

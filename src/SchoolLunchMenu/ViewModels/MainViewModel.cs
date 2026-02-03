@@ -21,6 +21,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IMenuAnalyzer _menuAnalyzer;
     private readonly ICalendarHtmlGenerator _calendarGenerator;
     private readonly ISettingsService _settingsService;
+    private readonly IDayLabelFetchService _dayLabelFetchService;
     private readonly ILogger<MainViewModel> _logger;
 
     private FamilyMenuResponse? _lastMenuResponse;
@@ -28,6 +29,9 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>Debounce timer for auto-saving settings after user changes.</summary>
     private CancellationTokenSource? _saveDebounce;
+
+    /// <summary>Tracks whether a debounced save is pending and needs flushing.</summary>
+    private bool _savePending;
 
     /// <summary>Master list of all not-preferred options (unfiltered).</summary>
     private readonly List<NotPreferredOption> _allRecipes = [];
@@ -47,6 +51,7 @@ public partial class MainViewModel : ObservableObject
         IMenuAnalyzer menuAnalyzer,
         ICalendarHtmlGenerator calendarGenerator,
         ISettingsService settingsService,
+        IDayLabelFetchService dayLabelFetchService,
         ILogger<MainViewModel> logger)
     {
         _apiService = apiService;
@@ -54,6 +59,7 @@ public partial class MainViewModel : ObservableObject
         _menuAnalyzer = menuAnalyzer;
         _calendarGenerator = calendarGenerator;
         _settingsService = settingsService;
+        _dayLabelFetchService = dayLabelFetchService;
         _logger = logger;
 
         // Initialize month/year to current
@@ -120,6 +126,16 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public ObservableCollection<ForcedHomeDayOption> ForcedHomeDays { get; } = [];
 
+    /// <summary>
+    /// Plan label override entries for customizing vending button labels.
+    /// </summary>
+    public ObservableCollection<PlanLabelEntry> PlanLabelEntries { get; } = [];
+
+    /// <summary>
+    /// Holiday override entries for customizing no-school day icons and messages.
+    /// </summary>
+    public ObservableCollection<HolidayOverrideEntry> HolidayOverrideEntries { get; } = [];
+
     [ObservableProperty]
     private bool _hasRecipes;
 
@@ -143,6 +159,7 @@ public partial class MainViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(LoadFromHarCommand))]
     [NotifyCanExecuteChangedFor(nameof(GenerateCalendarCommand))]
     [NotifyCanExecuteChangedFor(nameof(LookupIdentifierCommand))]
+    [NotifyCanExecuteChangedFor(nameof(FetchDayLabelsCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -176,7 +193,50 @@ public partial class MainViewModel : ObservableObject
     private bool _isAllergenExpanded;
 
     [ObservableProperty]
+    private string _selectedLayoutMode = "IconsLeft";
+
+    [ObservableProperty]
+    private bool _showUnsafeLines;
+
+    [ObservableProperty]
+    private string _unsafeLineMessage = "No safe options";
+
+    [ObservableProperty]
     private string _allergenSummary = "None selected";
+
+    [ObservableProperty]
+    private bool _crossOutPastDays;
+
+    [ObservableProperty]
+    private bool _showShareFooter;
+
+    [ObservableProperty]
+    private string _dayLabelStartDate = "";
+
+    [ObservableProperty]
+    private string _dayLabelCorner = "TopRight";
+
+    /// <summary>Observable collection of day label cycle entries for the sidebar.</summary>
+    public ObservableCollection<DayLabelEntry> DayLabelEntries { get; } = [];
+
+    /// <summary>Curated color suggestions for day label color selection.</summary>
+    public static IReadOnlyList<string> DayLabelColorSuggestions { get; } =
+    [
+        "#dc3545", "#adb5bd", "#0d6efd", "#198754", "#fd7e14",
+        "#6f42c1", "#d63384", "#0dcaf0", "#ffc107", "#20c997"
+    ];
+
+    /// <summary>Available corner positions for the day label triangle.</summary>
+    public static IReadOnlyList<string> DayLabelCornerOptions { get; } =
+    [
+        "TopRight", "TopLeft", "BottomRight", "BottomLeft"
+    ];
+
+    [ObservableProperty]
+    private int _previewZoom = 75;
+
+    /// <summary>The base HTML without zoom, saved to file and used as the source for preview zoom injection.</summary>
+    private string? _baseGeneratedHtml;
 
     [ObservableProperty]
     private CalendarTheme _selectedTheme;
@@ -201,10 +261,17 @@ public partial class MainViewModel : ObservableObject
     private bool _themeManuallySelected;
     private bool _suppressThemeManualFlag;
 
-    partial void OnSelectedBuildingChanged(Building? value) => ScheduleSettingsSave();
+    partial void OnSelectedBuildingChanged(Building? value)
+    {
+        OnPropertyChanged(nameof(SourceUrl));
+        ScheduleSettingsSave();
+    }
 
     partial void OnSelectedSessionChanged(string? value)
     {
+        // Flush any pending save for the previous session before loading the new one
+        FlushPendingSave();
+
         if (value is not null && _lastMenuResponse is not null)
         {
             _ = PopulateRecipeNamesAsync(_lastMenuResponse);
@@ -225,6 +292,48 @@ public partial class MainViewModel : ObservableObject
             _themeManuallySelected = true;
         ScheduleSettingsSave();
     }
+
+    partial void OnIdentifierCodeChanged(string value) => OnPropertyChanged(nameof(SourceUrl));
+
+    partial void OnSelectedLayoutModeChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsGridMode));
+        ScheduleSettingsSave();
+    }
+
+    partial void OnPreviewZoomChanged(int value) => ApplyPreviewZoom();
+
+    partial void OnShowUnsafeLinesChanged(bool value) => ScheduleSettingsSave();
+
+    partial void OnUnsafeLineMessageChanged(string value) => ScheduleSettingsSave();
+
+    partial void OnCrossOutPastDaysChanged(bool value) => ScheduleSettingsSave();
+
+    partial void OnShowShareFooterChanged(bool value) => ScheduleSettingsSave();
+
+    partial void OnDayLabelStartDateChanged(string value) => ScheduleSettingsSave();
+
+    partial void OnDayLabelCornerChanged(string value) => ScheduleSettingsSave();
+
+    /// <summary>Whether the grid buttons are active (used for sidebar visibility of plan label entries).</summary>
+    public bool IsGridMode => SelectedLayoutMode is "IconsLeft" or "IconsRight";
+
+    /// <summary>Available layout mode options for the ComboBox.</summary>
+    public static IReadOnlyList<LayoutModeOption> LayoutModeOptions { get; } =
+    [
+        new("List", "📋 List"),
+        new("IconsLeft", "⬅️ Icons Left"),
+        new("IconsRight", "➡️ Icons Right"),
+    ];
+
+    /// <summary>Curated emoji suggestions for plan icon selection.</summary>
+    public static IReadOnlyList<string> PlanIconSuggestions { get; } =
+    [
+        "", "🍽️", "🐱", "🐾", "🦅", "🐦", "🦁", "🐻", "🐺", "🐯",
+        "🍕", "🌮", "🍔", "🥗", "🍎", "🥪", "🍝", "🍲",
+        "⭐", "🔵", "🟢", "🟡", "🔴", "🟣", "❤️", "💙", "💚",
+        "1️⃣", "2️⃣", "3️⃣", "🅰️", "🅱️",
+    ];
 
     partial void OnRecipeSearchTextChanged(string value) => RebuildFilteredRecipes();
 
@@ -261,6 +370,36 @@ public partial class MainViewModel : ObservableObject
             IdentifierCode = settings.Identifier;
         if (!string.IsNullOrEmpty(settings.DistrictId))
             DistrictId = settings.DistrictId;
+
+        // Migrate legacy ShowMealButtons to LayoutMode
+        if (string.IsNullOrEmpty(settings.LayoutMode) || settings.LayoutMode == "List")
+        {
+            SelectedLayoutMode = settings.ShowMealButtons ? "IconsRight" : "List";
+        }
+        else
+        {
+            SelectedLayoutMode = settings.LayoutMode;
+        }
+
+        ShowUnsafeLines = settings.ShowUnsafeLines;
+        if (!string.IsNullOrEmpty(settings.UnsafeLineMessage))
+            UnsafeLineMessage = settings.UnsafeLineMessage;
+
+        CrossOutPastDays = settings.CrossOutPastDays;
+        ShowShareFooter = settings.ShowShareFooter;
+        LoadDayLabelEntries(settings.DayLabelCycle, settings.DayLabelStartDate);
+        DayLabelCorner = string.IsNullOrEmpty(settings.DayLabelCorner) ? "TopRight" : settings.DayLabelCorner;
+
+        // Restore district name from settings (visible before cache loads)
+        if (!string.IsNullOrEmpty(settings.DistrictName))
+            DistrictName = settings.DistrictName;
+
+        // Load holiday overrides (pre-populate defaults if empty)
+        if (settings.HolidayOverrides.Count == 0)
+        {
+            settings.HolidayOverrides = GetDefaultHolidayOverrides();
+        }
+        LoadHolidayOverrides(settings.HolidayOverrides);
 
         // If a HAR file was provided via command-line arg, load it directly
         if (!string.IsNullOrEmpty(harFilePath))
@@ -348,7 +487,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         // Preserve other sessions' preferences from saved settings
-        var existing = await _settingsService.LoadAsync();
+        var existing = await _settingsService.LoadAsync().ConfigureAwait(false);
         foreach (var (key, value) in existing.NotPreferredBySession)
         {
             if (!key.Equals(session, StringComparison.OrdinalIgnoreCase))
@@ -360,7 +499,8 @@ public partial class MainViewModel : ObservableObject
                 favoritesBySession[key] = value;
         }
 
-        // Build forced home days per session
+        // Build forced home days per session (always write the key so we can
+        // distinguish "never configured" from "user explicitly unchecked all days")
         var forcedHomeDaysBySession = new Dictionary<string, List<string>>(existing.ForcedHomeDaysBySession);
         if (!string.IsNullOrEmpty(session))
         {
@@ -368,10 +508,7 @@ public partial class MainViewModel : ObservableObject
                 .Where(d => d.IsForced)
                 .Select(d => d.DayOfWeek.ToString())
                 .ToList();
-            if (checkedDays.Count > 0)
-                forcedHomeDaysBySession[session] = checkedDays;
-            else
-                forcedHomeDaysBySession.Remove(session);
+            forcedHomeDaysBySession[session] = checkedDays;
         }
 
         var settings = new AppSettings
@@ -385,12 +522,25 @@ public partial class MainViewModel : ObservableObject
             FavoritesBySession = favoritesBySession,
             Identifier = IdentifierCode,
             DistrictId = DistrictId,
+            DistrictName = DistrictName,
             BuildingId = SelectedBuilding?.BuildingId,
             SelectedSessionName = SelectedSession,
             SelectedThemeName = SelectedTheme.Name,
-            HiddenThemeNames = existing.HiddenThemeNames
+            HiddenThemeNames = existing.HiddenThemeNames,
+            LayoutMode = SelectedLayoutMode,
+            ShowUnsafeLines = ShowUnsafeLines,
+            UnsafeLineMessage = UnsafeLineMessage,
+            PlanLabelOverrides = MergePlanOverrides(existing.PlanLabelOverrides, BuildPlanLabelOverridesFromUi()),
+            PlanIconOverrides = MergePlanOverrides(existing.PlanIconOverrides, BuildPlanIconOverridesFromUi()),
+            PlanDisplayOrder = MergePlanDisplayOrder(existing.PlanDisplayOrder, BuildPlanDisplayOrderFromUi()),
+            HolidayOverrides = BuildHolidayOverridesFromUi(),
+            CrossOutPastDays = CrossOutPastDays,
+            ShowShareFooter = ShowShareFooter,
+            DayLabelCycle = BuildDayLabelCycleFromUi(),
+            DayLabelStartDate = string.IsNullOrWhiteSpace(DayLabelStartDate) ? null : DayLabelStartDate.Trim(),
+            DayLabelCorner = DayLabelCorner
         };
-        await _settingsService.SaveAsync(settings);
+        await _settingsService.SaveAsync(settings).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -403,6 +553,7 @@ public partial class MainViewModel : ObservableObject
 
         _saveDebounce?.Cancel();
         _saveDebounce = new CancellationTokenSource();
+        _savePending = true;
         var token = _saveDebounce.Token;
 
         _ = Task.Run(async () =>
@@ -411,13 +562,29 @@ public partial class MainViewModel : ObservableObject
             {
                 await Task.Delay(500, token);
                 if (!token.IsCancellationRequested)
+                {
                     await SaveSettingsAsync();
+                    _savePending = false;
+                }
             }
             catch (TaskCanceledException)
             {
                 // Debounce cancelled by a newer change, expected
             }
         }, token);
+    }
+
+    /// <summary>
+    /// Flushes any pending debounced save synchronously. Called before switching sessions
+    /// to ensure the previous session's changes are persisted before loading new data.
+    /// </summary>
+    private void FlushPendingSave()
+    {
+        if (!_savePending) return;
+
+        _saveDebounce?.Cancel();
+        SaveSettingsAsync().GetAwaiter().GetResult();
+        _savePending = false;
     }
 
     /// <summary>
@@ -508,6 +675,15 @@ public partial class MainViewModel : ObservableObject
                 Name = a.Name,
                 SortOrder = 0
             }).ToList();
+
+            // Ensure the identifier response is available for cache (synthesize from UI state if needed)
+            _lastIdentifierResponse ??= new FamilyMenuIdentifierResponse
+            {
+                DistrictId = DistrictId!,
+                DistrictName = DistrictName ?? "",
+                Identifier = IdentifierCode.Trim(),
+                Buildings = AvailableBuildings.ToList()
+            };
 
             await _settingsService.SaveMenuCacheAsync(new MenuCache
             {
@@ -605,18 +781,60 @@ public partial class MainViewModel : ObservableObject
             var sessionName = SelectedSession;
             var buildingName = SelectedBuilding?.Name;
             var theme = SelectedTheme;
+            var layoutMode = SelectedLayoutMode;
+            var showUnsafeLines = ShowUnsafeLines;
+            var unsafeLineMessage = UnsafeLineMessage;
+            var previewZoom = PreviewZoom;
+
+            // Build overrides from live UI state (not disk, which may lag behind)
+            var planLabelOverrides = BuildPlanLabelOverridesFromUi();
+            var planIconOverrides = BuildPlanIconOverridesFromUi();
+            var planDisplayOrder = BuildPlanDisplayOrderFromUi();
+            var currentSettings = await _settingsService.LoadAsync();
+            var holidayOverrides = currentSettings.HolidayOverrides;
+            var crossOutPastDays = CrossOutPastDays;
+            var showShareFooter = ShowShareFooter;
+            var sourceUrl = SourceUrl;
+            var dayLabelCycle = BuildDayLabelCycleFromUi();
+            var dayLabelStartDateStr = DayLabelStartDate;
+            var dayLabelCorner = DayLabelCorner;
 
             // Run CPU-bound analysis and HTML generation on a background thread
-            var (html, tempPath) = await Task.Run(() =>
+            var (baseHtml, tempPath) = await Task.Run(() =>
             {
                 var processedMonth = _menuAnalyzer.Analyze(menuResponse, selectedAllergenIds, notPreferredNames, favoriteNames, year, month, sessionName, buildingName);
+
+                DateOnly? parsedDayLabelStart = null;
+                if (!string.IsNullOrWhiteSpace(dayLabelStartDateStr) &&
+                    DateOnly.TryParse(dayLabelStartDateStr, out var dlsd))
+                    parsedDayLabelStart = dlsd;
+
+                var renderOptions = new CalendarRenderOptions
+                {
+                    LayoutMode = layoutMode,
+                    ShowUnsafeLines = showUnsafeLines,
+                    UnsafeLineMessage = unsafeLineMessage,
+                    PlanLabelOverrides = planLabelOverrides,
+                    PlanIconOverrides = planIconOverrides,
+                    PlanDisplayOrder = planDisplayOrder,
+                    HolidayOverrides = holidayOverrides,
+                    CrossOutPastDays = crossOutPastDays,
+                    ShowShareFooter = showShareFooter,
+                    SourceUrl = sourceUrl,
+                    Today = GetPastDayCutoff(),
+                    DayLabelCycle = dayLabelCycle,
+                    DayLabelStartDate = parsedDayLabelStart,
+                    DayLabelCorner = dayLabelCorner
+                };
 
                 var generatedHtml = _calendarGenerator.Generate(
                     processedMonth,
                     selectedAllergenNames,
                     forcedHomeDays,
-                    theme);
+                    theme,
+                    renderOptions);
 
+                // Save clean HTML (no zoom) to file for browser/print
                 var dir = Path.Combine(Path.GetTempPath(), "SchoolLunchMenu");
                 Directory.CreateDirectory(dir);
                 var path = Path.Combine(dir, $"LunchCalendar_{year}-{month:D2}.html");
@@ -626,7 +844,8 @@ public partial class MainViewModel : ObservableObject
             });
 
             GeneratedHtmlPath = tempPath;
-            GeneratedHtml = html;
+            _baseGeneratedHtml = baseHtml;
+            GeneratedHtml = InjectZoom(baseHtml, previewZoom);
 
             // Save settings after generation
             await SaveSettingsAsync();
@@ -651,12 +870,470 @@ public partial class MainViewModel : ObservableObject
     private bool CanOpenInBrowser() => GeneratedHtmlPath is not null;
 
     /// <summary>
+    /// Computed URL to the LINQ Connect public menu page for the current identifier and building.
+    /// </summary>
+    public string? SourceUrl
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(IdentifierCode) || SelectedBuilding is null)
+                return null;
+            return $"https://linqconnect.com/public/menu/{IdentifierCode.Trim()}?buildingId={SelectedBuilding.BuildingId}";
+        }
+    }
+
+    /// <summary>
     /// Opens the generated HTML calendar in the default browser.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanOpenInBrowser))]
     private void OpenInBrowser()
     {
         Process.Start(new ProcessStartInfo(GeneratedHtmlPath!) { UseShellExecute = true });
+    }
+
+    /// <summary>
+    /// Increases the preview zoom by 5%.
+    /// </summary>
+    [RelayCommand]
+    private void ZoomIn()
+    {
+        if (PreviewZoom < 200)
+            PreviewZoom = Math.Min(200, PreviewZoom + 5);
+    }
+
+    /// <summary>
+    /// Decreases the preview zoom by 5%.
+    /// </summary>
+    [RelayCommand]
+    private void ZoomOut()
+    {
+        if (PreviewZoom > 25)
+            PreviewZoom = Math.Max(25, PreviewZoom - 5);
+    }
+
+    /// <summary>
+    /// Applies the current zoom level to the preview HTML without regenerating the calendar.
+    /// </summary>
+    private void ApplyPreviewZoom()
+    {
+        if (_baseGeneratedHtml is null) return;
+
+        GeneratedHtml = InjectZoom(_baseGeneratedHtml, PreviewZoom);
+    }
+
+    /// <summary>
+    /// Injects a CSS zoom style into the HTML body tag for preview display.
+    /// </summary>
+    private static string InjectZoom(string html, int zoomPct)
+    {
+        if (zoomPct == 100)
+            return html;
+
+        return html.Replace(
+            "<body style=\"width:10.5in;\">",
+            $"<body style=\"width:10.5in;zoom:{zoomPct}%;\">");
+    }
+
+    /// <summary>
+    /// Opens the LINQ Connect public menu page in the default browser.
+    /// </summary>
+    [RelayCommand]
+    private void OpenSourceLink()
+    {
+        if (SourceUrl is not null)
+            Process.Start(new ProcessStartInfo(SourceUrl) { UseShellExecute = true });
+    }
+
+    /// <summary>
+    /// Adds a new empty holiday override entry.
+    /// </summary>
+    [RelayCommand]
+    private void AddHolidayOverride()
+    {
+        var entry = new HolidayOverrideEntry();
+        entry.PropertyChanged += OnHolidayOverrideChanged;
+        HolidayOverrideEntries.Add(entry);
+    }
+
+    /// <summary>
+    /// Removes a holiday override entry.
+    /// </summary>
+    [RelayCommand]
+    private void RemoveHolidayOverride(HolidayOverrideEntry entry)
+    {
+        entry.PropertyChanged -= OnHolidayOverrideChanged;
+        HolidayOverrideEntries.Remove(entry);
+        SaveHolidayOverridesToSettings();
+    }
+
+    /// <summary>
+    /// Adds a new empty day label entry.
+    /// </summary>
+    [RelayCommand]
+    private void AddDayLabel()
+    {
+        var entry = new DayLabelEntry();
+        entry.PropertyChanged += OnDayLabelEntryChanged;
+        DayLabelEntries.Add(entry);
+    }
+
+    /// <summary>
+    /// Removes a day label entry.
+    /// </summary>
+    [RelayCommand]
+    private void RemoveDayLabel(DayLabelEntry entry)
+    {
+        entry.PropertyChanged -= OnDayLabelEntryChanged;
+        DayLabelEntries.Remove(entry);
+        ScheduleSettingsSave();
+    }
+
+    /// <summary>
+    /// Fetches day labels (Red/White Day) from the ISD194 CMS school calendar and populates the day label cycle.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExecuteCommands))]
+    private async Task FetchDayLabelsAsync()
+    {
+        IsBusy = true;
+        StatusText = "Fetching day labels from school calendar...";
+
+        try
+        {
+            var result = await _dayLabelFetchService.FetchAsync();
+
+            if (result.Entries.Count == 0)
+            {
+                StatusText = "No day labels found on the calendar page.";
+                return;
+            }
+
+            // Clear existing entries
+            foreach (var entry in DayLabelEntries)
+                entry.PropertyChanged -= OnDayLabelEntryChanged;
+            DayLabelEntries.Clear();
+
+            // Map known label names to colors
+            var colorMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Red Day"] = "#dc3545",
+                ["White Day"] = "#adb5bd"
+            };
+
+            // Build entries for each distinct label
+            var colorIndex = 0;
+            foreach (var label in result.DistinctLabels)
+            {
+                if (!colorMap.TryGetValue(label, out var color))
+                {
+                    // Assign sequential colors from the suggestion palette
+                    color = DayLabelColorSuggestions[colorIndex % DayLabelColorSuggestions.Count];
+                    colorIndex++;
+                }
+
+                var entry = new DayLabelEntry
+                {
+                    Label = label.Replace(" Day", "").Trim(),
+                    Color = color
+                };
+                entry.PropertyChanged += OnDayLabelEntryChanged;
+                DayLabelEntries.Add(entry);
+            }
+
+            // Set start date to the first entry's date
+            DayLabelStartDate = result.Entries[0].Date.ToString("M/d/yyyy");
+
+            ScheduleSettingsSave();
+            StatusText = $"Fetched {result.Entries.Count} day labels ({string.Join(", ", result.DistinctLabels)}) starting {DayLabelStartDate}.";
+            _logger.LogInformation("Fetched {Count} day labels from CMS: {Labels}",
+                result.Entries.Count, string.Join(", ", result.DistinctLabels));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to fetch day labels from CMS");
+            StatusText = $"Error fetching day labels: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void OnDayLabelEntryChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        ScheduleSettingsSave();
+    }
+
+    private void OnHolidayOverrideChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        SaveHolidayOverridesToSettings();
+    }
+
+    /// <summary>
+    /// Persists holiday overrides from the UI collection back to settings.
+    /// </summary>
+    private void SaveHolidayOverridesToSettings()
+    {
+        ScheduleSettingsSave();
+    }
+
+    private void OnPlanLabelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(PlanLabelEntry.ShortLabel) or nameof(PlanLabelEntry.Icon))
+            ScheduleSettingsSave();
+    }
+
+    /// <summary>
+    /// Populates plan label entries from discovered plan names, saved overrides, icons, and order.
+    /// </summary>
+    private void PopulatePlanLabelEntries(
+        IEnumerable<string> planNames,
+        Dictionary<string, string> savedOverrides,
+        Dictionary<string, string> savedIcons,
+        List<string> savedOrder)
+    {
+        foreach (var entry in PlanLabelEntries)
+            entry.PropertyChanged -= OnPlanLabelChanged;
+
+        PlanLabelEntries.Clear();
+
+        // Build ordered list: saved order first, then remaining alphabetically
+        var allNames = planNames.ToHashSet();
+        var ordered = new List<string>();
+        foreach (var name in savedOrder)
+        {
+            if (allNames.Remove(name))
+                ordered.Add(name);
+        }
+        ordered.AddRange(allNames.OrderBy(n => n));
+
+        foreach (var name in ordered)
+        {
+            savedOverrides.TryGetValue(name, out var savedLabel);
+            savedIcons.TryGetValue(name, out var savedIcon);
+            var entry = new PlanLabelEntry
+            {
+                PlanName = name,
+                ShortLabel = savedLabel ?? "",
+                Icon = savedIcon ?? ""
+            };
+            entry.PropertyChanged += OnPlanLabelChanged;
+            PlanLabelEntries.Add(entry);
+        }
+    }
+
+    /// <summary>
+    /// Moves a plan label entry up in the list.
+    /// </summary>
+    [RelayCommand]
+    private void MovePlanUp(PlanLabelEntry entry)
+    {
+        var index = PlanLabelEntries.IndexOf(entry);
+        if (index > 0)
+        {
+            PlanLabelEntries.Move(index, index - 1);
+            ScheduleSettingsSave();
+        }
+    }
+
+    /// <summary>
+    /// Moves a plan label entry down in the list.
+    /// </summary>
+    [RelayCommand]
+    private void MovePlanDown(PlanLabelEntry entry)
+    {
+        var index = PlanLabelEntries.IndexOf(entry);
+        if (index >= 0 && index < PlanLabelEntries.Count - 1)
+        {
+            PlanLabelEntries.Move(index, index + 1);
+            ScheduleSettingsSave();
+        }
+    }
+
+    /// <summary>
+    /// Toggles edit mode for a plan label entry.
+    /// </summary>
+    [RelayCommand]
+    private void EditPlanLabel(PlanLabelEntry entry)
+    {
+        if (!entry.IsEditing)
+        {
+            // Prefill with current display label so the user has something to edit
+            if (string.IsNullOrWhiteSpace(entry.ShortLabel))
+                entry.ShortLabel = entry.PlanName;
+            entry.IsEditing = true;
+        }
+        else
+        {
+            entry.IsEditing = false;
+            ScheduleSettingsSave();
+        }
+    }
+
+    /// <summary>
+    /// Resets a plan label entry's short label to empty (reverts to full plan name).
+    /// </summary>
+    [RelayCommand]
+    private void ResetPlanLabel(PlanLabelEntry entry)
+    {
+        entry.ShortLabel = "";
+        entry.IsEditing = false;
+        ScheduleSettingsSave();
+    }
+
+    /// <summary>
+    /// Builds a dictionary of plan label overrides from the UI collection for saving.
+    /// </summary>
+    private Dictionary<string, string> BuildPlanLabelOverridesFromUi()
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var entry in PlanLabelEntries)
+        {
+            if (!string.IsNullOrWhiteSpace(entry.ShortLabel))
+                result[entry.PlanName] = entry.ShortLabel.Trim();
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Builds a dictionary of plan icon overrides from the UI collection for saving.
+    /// </summary>
+    private Dictionary<string, string> BuildPlanIconOverridesFromUi()
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var entry in PlanLabelEntries)
+        {
+            if (!string.IsNullOrWhiteSpace(entry.Icon))
+                result[entry.PlanName] = entry.Icon.Trim();
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Builds the plan display order list from the UI collection for saving.
+    /// </summary>
+    private List<string> BuildPlanDisplayOrderFromUi()
+    {
+        return PlanLabelEntries.Select(e => e.PlanName).ToList();
+    }
+
+    /// <summary>
+    /// Merges plan overrides: current UI state takes priority, then existing saved entries for plans
+    /// not currently visible in the UI are preserved. This prevents session switches from wiping
+    /// out customizations for plans belonging to other sessions.
+    /// </summary>
+    private Dictionary<string, string> MergePlanOverrides(
+        Dictionary<string, string> existing, Dictionary<string, string> fromUi)
+    {
+        var currentPlanNames = PlanLabelEntries.Select(e => e.PlanName).ToHashSet();
+        var merged = new Dictionary<string, string>(fromUi);
+
+        foreach (var (key, value) in existing)
+        {
+            // Preserve saved entries for plans not currently in the UI
+            if (!currentPlanNames.Contains(key))
+                merged[key] = value;
+        }
+
+        return merged;
+    }
+
+    /// <summary>
+    /// Merges plan display order: current UI order first, then appends saved entries for plans
+    /// not currently visible (preserving their relative order).
+    /// </summary>
+    private List<string> MergePlanDisplayOrder(
+        List<string> existing, List<string> fromUi)
+    {
+        var currentPlanNames = PlanLabelEntries.Select(e => e.PlanName).ToHashSet();
+        var merged = new List<string>(fromUi);
+
+        foreach (var name in existing)
+        {
+            if (!currentPlanNames.Contains(name) && !merged.Contains(name))
+                merged.Add(name);
+        }
+
+        return merged;
+    }
+
+    /// <summary>
+    /// Builds a dictionary of holiday overrides from the UI collection for saving.
+    /// </summary>
+    private Dictionary<string, HolidayOverride> BuildHolidayOverridesFromUi()
+    {
+        var result = new Dictionary<string, HolidayOverride>();
+        foreach (var entry in HolidayOverrideEntries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Keyword)) continue;
+            result[entry.Keyword.Trim().ToLowerInvariant()] = new HolidayOverride
+            {
+                Emoji = entry.Emoji,
+                CustomMessage = string.IsNullOrWhiteSpace(entry.CustomMessage) ? null : entry.CustomMessage
+            };
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Builds the day label cycle list from the UI collection for saving.
+    /// </summary>
+    private List<DayLabel> BuildDayLabelCycleFromUi()
+    {
+        return DayLabelEntries
+            .Where(e => !string.IsNullOrWhiteSpace(e.Label))
+            .Select(e => new DayLabel
+            {
+                Label = e.Label.Trim(),
+                Color = string.IsNullOrWhiteSpace(e.Color) ? "#6c757d" : e.Color.Trim()
+            })
+            .ToList();
+    }
+
+    /// <summary>
+    /// Loads day label entries from settings into the observable collection.
+    /// </summary>
+    private void LoadDayLabelEntries(List<DayLabel> dayLabels, string? startDate)
+    {
+        foreach (var entry in DayLabelEntries)
+            entry.PropertyChanged -= OnDayLabelEntryChanged;
+
+        DayLabelEntries.Clear();
+
+        foreach (var dl in dayLabels)
+        {
+            var entry = new DayLabelEntry
+            {
+                Label = dl.Label,
+                Color = dl.Color
+            };
+            entry.PropertyChanged += OnDayLabelEntryChanged;
+            DayLabelEntries.Add(entry);
+        }
+
+        DayLabelStartDate = startDate ?? "";
+    }
+
+    /// <summary>
+    /// Loads holiday override entries from settings into the observable collection.
+    /// </summary>
+    private void LoadHolidayOverrides(Dictionary<string, HolidayOverride> overrides)
+    {
+        foreach (var entry in HolidayOverrideEntries)
+            entry.PropertyChanged -= OnHolidayOverrideChanged;
+
+        HolidayOverrideEntries.Clear();
+
+        foreach (var (keyword, holidayOverride) in overrides)
+        {
+            var entry = new HolidayOverrideEntry
+            {
+                Keyword = keyword,
+                Emoji = holidayOverride.Emoji,
+                CustomMessage = holidayOverride.CustomMessage ?? ""
+            };
+            entry.PropertyChanged += OnHolidayOverrideChanged;
+            HolidayOverrideEntries.Add(entry);
+        }
     }
 
     /// <summary>
@@ -683,8 +1360,7 @@ public partial class MainViewModel : ObservableObject
         }
         else
         {
-            // Default to Thursday when no saved entry exists
-            checkedDays = [DayOfWeek.Thursday];
+            checkedDays = [];
         }
 
         DayOfWeek[] weekdays = [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday];
@@ -941,6 +1617,7 @@ public partial class MainViewModel : ObservableObject
         var favoritesSet = savedFavorites?.ToHashSet() ?? [];
 
         var uniqueNames = new HashSet<string>();
+        var discoveredPlanNames = new HashSet<string>();
         _recipeAllergenMap = new Dictionary<string, HashSet<string>>();
 
         // Use selected session if available, otherwise scan all sessions
@@ -960,6 +1637,7 @@ public partial class MainViewModel : ObservableObject
         {
             foreach (var plan in session.MenuPlans)
             {
+                discoveredPlanNames.Add(plan.MenuPlanName);
                 foreach (var day in plan.Days)
                 {
                     foreach (var meal in day.MenuMeals ?? [])
@@ -1007,6 +1685,7 @@ public partial class MainViewModel : ObservableObject
         FavoriteSearchText = string.Empty;
         RebuildFilteredRecipes();
         RebuildFilteredFavorites();
+        PopulatePlanLabelEntries(discoveredPlanNames, settings.PlanLabelOverrides, settings.PlanIconOverrides, settings.PlanDisplayOrder);
     }
 
     /// <summary>
@@ -1146,6 +1825,35 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Returns the default holiday override dictionary matching the hardcoded GetNoSchoolEmoji patterns.
+    /// </summary>
+    private static Dictionary<string, HolidayOverride> GetDefaultHolidayOverrides() => new()
+    {
+        ["winter break"] = new HolidayOverride { Emoji = "❄️" },
+        ["christmas"] = new HolidayOverride { Emoji = "❄️" },
+        ["thanksgiving"] = new HolidayOverride { Emoji = "🦃" },
+        ["president"] = new HolidayOverride { Emoji = "🇺🇸" },
+        ["mlk"] = new HolidayOverride { Emoji = "✊" },
+        ["martin luther king"] = new HolidayOverride { Emoji = "✊" },
+        ["memorial"] = new HolidayOverride { Emoji = "🇺🇸" },
+        ["labor"] = new HolidayOverride { Emoji = "🇺🇸" },
+        ["spring break"] = new HolidayOverride { Emoji = "🌸" },
+        ["teacher"] = new HolidayOverride { Emoji = "📚" }
+    };
+
+    /// <summary>
+    /// Returns today's date for past-day comparison, but only after 3 PM (end of school day).
+    /// Before 3 PM, returns yesterday's date so that today is not crossed out.
+    /// </summary>
+    private static DateOnly GetPastDayCutoff()
+    {
+        var now = DateTime.Now;
+        return now.Hour >= 15
+            ? DateOnly.FromDateTime(now)
+            : DateOnly.FromDateTime(now).AddDays(-1);
+    }
+
+    /// <summary>
     /// Formats a TimeSpan as a human-readable age string.
     /// </summary>
     private static string FormatAge(TimeSpan age)
@@ -1261,6 +1969,66 @@ public class ThemeListItem
     public string DisplayText => IsHeader
         ? $"── {HeaderText} ──"
         : Theme is not null ? $"{Theme.Emoji} {Theme.Name}" : "";
+}
+
+/// <summary>
+/// Represents a plan line with an editable short label for vending buttons.
+/// </summary>
+public partial class PlanLabelEntry : ObservableObject
+{
+    /// <summary>The original plan name from the menu data (read-only).</summary>
+    public string PlanName { get; init; } = "";
+
+    [ObservableProperty]
+    private string _shortLabel = "";
+
+    partial void OnShortLabelChanged(string value) => OnPropertyChanged(nameof(DisplayLabel));
+
+    [ObservableProperty]
+    private string _icon = "";
+
+    [ObservableProperty]
+    private bool _isEditing;
+
+    /// <summary>The label shown in view mode: short label if set, otherwise the full plan name.</summary>
+    public string DisplayLabel => string.IsNullOrWhiteSpace(ShortLabel) ? PlanName : ShortLabel;
+
+    /// <summary>Whether this entry has a custom short label override.</summary>
+    public bool HasCustomLabel => !string.IsNullOrWhiteSpace(ShortLabel);
+}
+
+/// <summary>
+/// Represents a layout mode option for the Day Layout ComboBox.
+/// </summary>
+/// <param name="Value">The internal value (e.g., "List", "IconsLeft", "IconsRight").</param>
+/// <param name="DisplayText">The display text shown in the dropdown.</param>
+public record LayoutModeOption(string Value, string DisplayText);
+
+/// <summary>
+/// Represents an editable holiday override entry in the UI.
+/// </summary>
+public partial class HolidayOverrideEntry : ObservableObject
+{
+    [ObservableProperty]
+    private string _keyword = "";
+
+    [ObservableProperty]
+    private string _emoji = "";
+
+    [ObservableProperty]
+    private string _customMessage = "";
+}
+
+/// <summary>
+/// Represents a day label entry in the rotating day label cycle.
+/// </summary>
+public partial class DayLabelEntry : ObservableObject
+{
+    [ObservableProperty]
+    private string _label = "";
+
+    [ObservableProperty]
+    private string _color = "#6c757d";
 }
 
 /// <summary>

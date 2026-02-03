@@ -84,7 +84,7 @@ Returns the list of allergens configured for a district.
 | `SortOrder` | int | Display sort order |
 | `Name` | string | Display name (e.g., "Milk", "Egg", "Peanut", "Tree Nut", "Wheat", "Soy", "Fish", "Shellfish", "Sesame") |
 
-There are 17 allergens total in the Lakeville district.
+There are 17 allergens total in a typical LINQ Connect district.
 
 **Known Allergen UUIDs**:
 | Allergen | UUID |

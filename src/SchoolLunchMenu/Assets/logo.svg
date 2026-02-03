@@ -1,51 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Background circle -->
-  <circle cx="128" cy="128" r="120" fill="#343a40"/>
+  <!-- Background rounded square -->
+  <rect x="4" y="4" width="248" height="248" rx="40" fill="#343a40"/>
 
-  <!-- Plate / tray -->
-  <ellipse cx="128" cy="148" rx="88" ry="56" fill="#f8f9fa" stroke="#dee2e6" stroke-width="3"/>
-  <ellipse cx="128" cy="148" rx="72" ry="44" fill="#ffffff" stroke="#dee2e6" stroke-width="1.5"/>
-
-  <!-- Calendar grid overlay -->
-  <rect x="72" y="60" width="112" height="88" rx="6" fill="#ffffff" opacity="0.92" stroke="#343a40" stroke-width="2"/>
+  <!-- Calendar body -->
+  <rect x="28" y="52" width="200" height="168" rx="12" fill="#ffffff" stroke="#dee2e6" stroke-width="3"/>
 
   <!-- Calendar header bar -->
-  <rect x="72" y="60" width="112" height="20" rx="6" fill="#343a40"/>
-  <rect x="72" y="74" width="112" height="6" fill="#343a40"/>
+  <rect x="28" y="52" width="200" height="36" rx="12" fill="#28a745"/>
+  <rect x="28" y="76" width="200" height="12" fill="#28a745"/>
 
-  <!-- Calendar grid lines -->
-  <line x1="94" y1="80" x2="94" y2="148" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="116" y1="80" x2="116" y2="148" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="138" y1="80" x2="138" y2="148" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="160" y1="80" x2="160" y2="148" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="72" y1="97" x2="184" y2="97" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="72" y1="114" x2="184" y2="114" stroke="#dee2e6" stroke-width="0.8"/>
-  <line x1="72" y1="131" x2="184" y2="131" stroke="#dee2e6" stroke-width="0.8"/>
+  <!-- Calendar binding rings -->
+  <rect x="68" y="40" width="12" height="24" rx="4" fill="#6c757d"/>
+  <rect x="118" y="40" width="12" height="24" rx="4" fill="#6c757d"/>
+  <rect x="168" y="40" width="12" height="24" rx="4" fill="#6c757d"/>
 
   <!-- Day-of-week header text -->
-  <text x="83" y="74" fill="#ffffff" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle">M</text>
-  <text x="105" y="74" fill="#ffffff" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle">T</text>
-  <text x="127" y="74" fill="#ffffff" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle">W</text>
-  <text x="149" y="74" fill="#ffffff" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle">T</text>
-  <text x="172" y="74" fill="#ffffff" font-family="Arial" font-size="7" font-weight="bold" text-anchor="middle">F</text>
+  <text x="56" y="74" fill="#ffffff" font-family="Arial,sans-serif" font-size="14" font-weight="bold" text-anchor="middle">M</text>
+  <text x="92" y="74" fill="#ffffff" font-family="Arial,sans-serif" font-size="14" font-weight="bold" text-anchor="middle">T</text>
+  <text x="128" y="74" fill="#ffffff" font-family="Arial,sans-serif" font-size="14" font-weight="bold" text-anchor="middle">W</text>
+  <text x="164" y="74" fill="#ffffff" font-family="Arial,sans-serif" font-size="14" font-weight="bold" text-anchor="middle">T</text>
+  <text x="200" y="74" fill="#ffffff" font-family="Arial,sans-serif" font-size="14" font-weight="bold" text-anchor="middle">F</text>
 
-  <!-- Green "safe" day highlights -->
-  <rect x="73" y="81" width="20" height="15" rx="2" fill="#e8f5e9"/>
-  <rect x="117" y="81" width="20" height="15" rx="2" fill="#e8f5e9"/>
-  <rect x="139" y="98" width="20" height="15" rx="2" fill="#e8f5e9"/>
-  <rect x="73" y="115" width="20" height="15" rx="2" fill="#e8f5e9"/>
-  <rect x="161" y="115" width="22" height="15" rx="2" fill="#e8f5e9"/>
+  <!-- Calendar grid lines -->
+  <line x1="73" y1="88" x2="73" y2="220" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="109" y1="88" x2="109" y2="220" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="145" y1="88" x2="145" y2="220" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="181" y1="88" x2="181" y2="220" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="28" y1="120" x2="228" y2="120" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="28" y1="152" x2="228" y2="152" stroke="#e9ecef" stroke-width="1.2"/>
+  <line x1="28" y1="184" x2="228" y2="184" stroke="#e9ecef" stroke-width="1.2"/>
 
-  <!-- Favorite star -->
-  <text x="149" y="93" fill="#ff8c00" font-family="Arial" font-size="12" text-anchor="middle">&#9733;</text>
+  <!-- Green safe-day highlights (scattered cells) -->
+  <rect x="30" y="90" width="41" height="28" rx="3" fill="#e8f5e9"/>
+  <rect x="111" y="90" width="32" height="28" rx="3" fill="#e8f5e9"/>
+  <rect x="147" y="122" width="32" height="28" rx="3" fill="#e8f5e9"/>
+  <rect x="30" y="154" width="41" height="28" rx="3" fill="#e8f5e9"/>
+  <rect x="183" y="154" width="43" height="28" rx="3" fill="#e8f5e9"/>
 
-  <!-- Green dot indicators -->
-  <circle cx="83" cy="88" r="2.5" fill="#155724"/>
-  <circle cx="127" cy="88" r="2.5" fill="#155724"/>
-  <circle cx="149" cy="105" r="2.5" fill="#155724"/>
-  <circle cx="83" cy="122" r="2.5" fill="#155724"/>
-  <circle cx="172" cy="122" r="2.5" fill="#155724"/>
+  <!-- Green check dots for safe days -->
+  <circle cx="50" cy="104" r="5" fill="#155724"/>
+  <circle cx="127" cy="104" r="5" fill="#155724"/>
+  <circle cx="163" cy="136" r="5" fill="#155724"/>
+  <circle cx="50" cy="168" r="5" fill="#155724"/>
+  <circle cx="204" cy="168" r="5" fill="#155724"/>
 
-  <!-- Orange favorite star accent at top -->
-  <text x="168" y="56" fill="#ff8c00" font-family="Arial" font-size="20" text-anchor="middle">&#9733;</text>
+  <!-- Orange favorite star on one cell -->
+  <polygon points="164,93 167,100 175,101 169,106 171,114 164,110 157,114 159,106 153,101 161,100" fill="#ff8c00"/>
+
+  <!-- Cheeseburger in bottom-right corner -->
+  <g transform="translate(168, 176)">
+    <!-- Top bun -->
+    <path d="M8,24 Q8,8 36,8 Q64,8 64,24 Z" fill="#d4913a" stroke="#b8782e" stroke-width="1.5"/>
+    <!-- Sesame seeds -->
+    <ellipse cx="26" cy="14" rx="3" ry="2" fill="#f5e6cc" transform="rotate(-15,26,14)"/>
+    <ellipse cx="40" cy="12" rx="3" ry="2" fill="#f5e6cc" transform="rotate(10,40,12)"/>
+    <ellipse cx="52" cy="16" rx="3" ry="2" fill="#f5e6cc" transform="rotate(-5,52,16)"/>
+    <!-- Lettuce -->
+    <path d="M6,26 Q12,22 18,27 Q24,22 30,27 Q36,22 42,27 Q48,22 54,27 Q60,22 66,26" fill="none" stroke="#28a745" stroke-width="4" stroke-linecap="round"/>
+    <!-- Cheese -->
+    <polygon points="5,30 67,30 70,36 2,36" fill="#ffc107"/>
+    <!-- Patty -->
+    <rect x="6" y="36" width="60" height="10" rx="3" fill="#6b3a1f"/>
+    <!-- Bottom bun -->
+    <path d="M8,46 L64,46 Q64,56 36,56 Q8,56 8,46 Z" fill="#d4913a" stroke="#b8782e" stroke-width="1.5"/>
+  </g>
 </svg>

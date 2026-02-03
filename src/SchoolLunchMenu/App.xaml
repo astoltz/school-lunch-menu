@@ -6,6 +6,7 @@
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibleConverter" />
+        <converters:BoolToCollapsedConverter x:Key="BoolToCollapsedConverter" />
         <converters:NullToVisibleConverter x:Key="NullToVisibleConverter" />
         <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter" />
     </Application.Resources>

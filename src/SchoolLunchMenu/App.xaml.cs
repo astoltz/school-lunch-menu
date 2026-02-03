@@ -65,6 +65,7 @@ public partial class App : Application
 
         // HTTP
         services.AddHttpClient<ILinqConnectApiService, LinqConnectApiService>();
+        services.AddHttpClient<IDayLabelFetchService, DayLabelFetchService>();
 
         // Services
         services.AddSingleton<IHarFileService, HarFileService>();

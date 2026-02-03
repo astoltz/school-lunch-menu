@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using SchoolLunchMenu.ViewModels;
 
@@ -74,6 +75,27 @@ public partial class MainWindow : Window
 
         e.Effects = DragDropEffects.None;
         e.Handled = true;
+    }
+
+    private void OnPlanLabelTextBoxVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is true && sender is TextBox textBox)
+        {
+            textBox.Dispatcher.BeginInvoke(() =>
+            {
+                textBox.Focus();
+                textBox.SelectAll();
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        }
+    }
+
+    private void OnPlanLabelTextBoxKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && sender is TextBox { DataContext: ViewModels.PlanLabelEntry entry })
+        {
+            _viewModel.EditPlanLabelCommand.Execute(entry);
+            e.Handled = true;
+        }
     }
 
     private async void OnDrop(object sender, DragEventArgs e)

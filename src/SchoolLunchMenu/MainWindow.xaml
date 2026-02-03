@@ -7,9 +7,10 @@
         mc:Ignorable="d"
         Title="School Lunch Menu"
         Icon="Assets/logo.ico"
-        Height="700" Width="950"
-        MinHeight="500" MinWidth="750"
+        Height="800" Width="1100"
+        MinHeight="500" MinWidth="850"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         AllowDrop="True"
         DragOver="OnDragOver"
         Drop="OnDrop"
@@ -25,14 +26,14 @@
 
     <Grid Margin="12">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="300" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Left sidebar: Settings panel -->
         <Border Grid.Column="0" BorderBrush="#DEE2E6" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,8,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                <StackPanel Margin="0,0,4,0">
                     <!-- School Lookup section -->
                     <TextBlock Text="School Lookup" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
 
@@ -232,6 +233,234 @@
 
                     <Separator Margin="0,0,0,10" />
 
+                    <!-- Holiday Overrides (collapsible) -->
+                    <Expander Margin="0,0,0,4">
+                        <Expander.Header>
+                            <TextBlock Text="Holiday Icons" FontWeight="Bold" FontSize="13" />
+                        </Expander.Header>
+                        <StackPanel Margin="0,6,0,0">
+                            <TextBlock Text="Customize emoji and messages for no-school days by keyword."
+                                       TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding HolidayOverrideEntries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="30" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Keyword to match in academic note (e.g., thanksgiving)"
+                                                     FontSize="11" Padding="2" />
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding Emoji, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Emoji to display"
+                                                     FontSize="11" Padding="2" Margin="2,0" />
+                                            <Button Grid.Column="2" Content="✕" Padding="4,0"
+                                                    FontSize="10"
+                                                    Command="{Binding DataContext.RemoveHolidayOverrideCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Remove this override" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="+ Add Override"
+                                    Command="{Binding AddHolidayOverrideCommand}"
+                                    Padding="8,4" Margin="0,4,0,0"
+                                    FontSize="11" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Day Layout Mode -->
+                    <TextBlock Text="Day Layout" FontWeight="Bold" FontSize="13" Margin="0,0,0,6" />
+                    <ComboBox ItemsSource="{x:Static vm:MainViewModel.LayoutModeOptions}"
+                              SelectedValue="{Binding SelectedLayoutMode}"
+                              SelectedValuePath="Value"
+                              DisplayMemberPath="DisplayText"
+                              ToolTip="Choose how day cells are laid out: List (badges + items), or grid with icon buttons"
+                              Margin="0,0,0,4" />
+
+                    <!-- Show unsafe lines (visible when grid mode active) -->
+                    <CheckBox Content="Show unsafe lines"
+                              IsChecked="{Binding ShowUnsafeLines}"
+                              ToolTip="Show grayed-out buttons for plan lines with no allergen-safe options"
+                              Margin="12,0,0,4"
+                              Visibility="{Binding IsGridMode, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}" />
+                    <TextBox Text="{Binding UnsafeLineMessage, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="11" Padding="2"
+                             Margin="24,0,0,4"
+                             ToolTip="Custom message shown next to grayed-out buttons"
+                             Visibility="{Binding ShowUnsafeLines, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}" />
+
+                    <!-- Plan config (visible when grid mode active and plans loaded) -->
+                    <ItemsControl ItemsSource="{Binding PlanLabelEntries}"
+                                  Margin="12,0,0,10"
+                                  Visibility="{Binding IsGridMode, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="46" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Reorder buttons -->
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,2,0">
+                                        <Button Content="▲" Padding="2,0" FontSize="8"
+                                                Command="{Binding DataContext.MovePlanUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Move up" />
+                                        <Button Content="▼" Padding="2,0" FontSize="8"
+                                                Command="{Binding DataContext.MovePlanDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Move down" />
+                                    </StackPanel>
+                                    <!-- Emoji icon (editable dropdown) -->
+                                    <ComboBox Grid.Column="1"
+                                              IsEditable="True"
+                                              Text="{Binding Icon, UpdateSourceTrigger=LostFocus}"
+                                              ItemsSource="{Binding DataContext.PlanIconSuggestions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                              FontSize="11" Padding="2" Margin="0,0,2,0"
+                                              ToolTip="Emoji icon for this plan — pick from list or type your own" />
+                                    <!-- View mode: display label + edit button -->
+                                    <Grid Grid.Column="2"
+                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToCollapsedConverter}, FallbackValue=Visible}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayLabel}"
+                                                   FontSize="10"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding PlanName}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#6c757d" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasCustomLabel}" Value="True">
+                                                            <Setter Property="Foreground" Value="#333" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <Button Grid.Column="1" Content="✏️" Padding="2,0" FontSize="9"
+                                                Margin="2,0,0,0"
+                                                Command="{Binding DataContext.EditPlanLabelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Edit short label" />
+                                    </Grid>
+                                    <!-- Edit mode: TextBox + reset + done -->
+                                    <Grid Grid.Column="2"
+                                          Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding ShortLabel, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="11" Padding="2"
+                                                 IsVisibleChanged="OnPlanLabelTextBoxVisibleChanged"
+                                                 KeyDown="OnPlanLabelTextBoxKeyDown"
+                                                 ToolTip="{Binding PlanName, StringFormat='Editing label for: {0}'}" />
+                                        <Button Grid.Column="1" Content="↩" Padding="3,0" FontSize="10"
+                                                Margin="2,0,0,0"
+                                                Command="{Binding DataContext.ResetPlanLabelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Reset to original name" />
+                                        <Button Grid.Column="2" Content="✓" Padding="3,0" FontSize="10"
+                                                Margin="2,0,0,0"
+                                                Command="{Binding DataContext.EditPlanLabelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Done editing" />
+                                    </Grid>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <CheckBox Content="Cross out past days"
+                              IsChecked="{Binding CrossOutPastDays}"
+                              ToolTip="Fade and mark past days with an X on the calendar"
+                              Margin="0,4,0,4" />
+
+                    <CheckBox Content="Share link on calendar"
+                              IsChecked="{Binding ShowShareFooter}"
+                              ToolTip="Add a QR code and link to the project GitHub page at the bottom of the calendar"
+                              Margin="0,4,0,4" />
+
+                    <Separator Margin="0,0,0,10" />
+
+                    <!-- Day Labels (Red/White Day) -->
+                    <Expander Margin="0,0,0,4">
+                        <Expander.Header>
+                            <TextBlock Text="Day Labels (Red/White Day)" FontWeight="Bold" FontSize="13" />
+                        </Expander.Header>
+                        <StackPanel Margin="0,6,0,0">
+                            <TextBlock Text="Labels rotate across school days in order. No-school days are skipped."
+                                       TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
+                            <Button Content="Fetch from CMS"
+                                    Command="{Binding FetchDayLabelsCommand}"
+                                    ToolTip="Fetch Red/White Day schedule from the ISD194 school calendar"
+                                    Padding="8,4" Margin="0,0,0,6"
+                                    FontSize="11" />
+                            <TextBlock Text="Corner" FontSize="11" Margin="0,4,0,2" />
+                            <ComboBox ItemsSource="{x:Static vm:MainViewModel.DayLabelCornerOptions}"
+                                      SelectedItem="{Binding DayLabelCorner}"
+                                      FontSize="11"
+                                      ToolTip="Which corner the label triangle appears in"
+                                      Margin="0,0,0,4" />
+                            <TextBlock Text="Start Date" FontSize="11" Margin="0,4,0,2" />
+                            <TextBox Text="{Binding DayLabelStartDate, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="11"
+                                     ToolTip="Anchor date (M/d/yyyy). Blank = first school day of month."
+                                     Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding DayLabelEntries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Label text (e.g., Red, White, A, B)"
+                                                     FontSize="11" Padding="2" />
+                                            <ComboBox Grid.Column="1"
+                                                      IsEditable="True"
+                                                      Text="{Binding Color, UpdateSourceTrigger=LostFocus}"
+                                                      ItemsSource="{Binding DataContext.DayLabelColorSuggestions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      FontSize="11" Padding="2" Margin="2,0"
+                                                      ToolTip="CSS color for the corner triangle (e.g., #dc3545)" />
+                                            <Button Grid.Column="2" Content="✕" Padding="4,0"
+                                                    FontSize="10"
+                                                    Command="{Binding DataContext.RemoveDayLabelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Remove this label" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="+ Add Label"
+                                    Command="{Binding AddDayLabelCommand}"
+                                    Padding="8,4" Margin="0,4,0,0"
+                                    FontSize="11" />
+                        </StackPanel>
+                    </Expander>
+
+                    <Separator Margin="0,0,0,10" />
+
                     <!-- Action buttons -->
                     <Button TabIndex="4"
                             Content="_Fetch from API"
@@ -254,6 +483,7 @@
                             FontWeight="Bold"
                             Background="#28a745"
                             Foreground="White" />
+
                 </StackPanel>
             </ScrollViewer>
         </Border>
@@ -286,6 +516,8 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <ProgressBar Grid.Column="0"
@@ -301,7 +533,20 @@
                                FontSize="12"
                                ToolTip="{Binding StatusText}" />
 
-                    <Button Grid.Column="2"
+                    <!-- Preview zoom -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <Button Content="−" Padding="4,0" FontSize="12" FontWeight="Bold"
+                                Command="{Binding ZoomOutCommand}"
+                                ToolTip="Zoom out (−5%)" />
+                        <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#6c757d" Margin="4,0"
+                                   Text="{Binding PreviewZoom, StringFormat={}{0}%}"
+                                   ToolTip="Preview zoom level — does not affect saved file or print" />
+                        <Button Content="+" Padding="4,0" FontSize="12" FontWeight="Bold"
+                                Command="{Binding ZoomInCommand}"
+                                ToolTip="Zoom in (+5%)" />
+                    </StackPanel>
+
+                    <Button Grid.Column="3"
                             Content="Open in Browser"
                             Command="{Binding OpenInBrowserCommand}"
                             ToolTip="Open the generated calendar in the default browser"
@@ -310,6 +555,16 @@
                             Background="#28a745"
                             Foreground="White"
                             Visibility="{Binding GeneratedHtmlPath, Converter={StaticResource NullToCollapsedConverter}, FallbackValue=Collapsed}" />
+
+                    <Button Grid.Column="4"
+                            Content="View Source ↗"
+                            Command="{Binding OpenSourceLinkCommand}"
+                            ToolTip="Open the LINQ Connect public menu page in the default browser"
+                            Padding="8,4"
+                            Margin="4,0,0,0"
+                            Background="#0d6efd"
+                            Foreground="White"
+                            Visibility="{Binding SourceUrl, Converter={StaticResource NullToCollapsedConverter}, FallbackValue=Collapsed}" />
                 </Grid>
             </Border>
         </Grid>

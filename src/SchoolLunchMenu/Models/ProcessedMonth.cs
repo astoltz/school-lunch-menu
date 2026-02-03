@@ -14,7 +14,7 @@ public record ProcessedMonth
     /// <summary>All processed weekdays in this month.</summary>
     public required IReadOnlyList<ProcessedDay> Days { get; init; }
 
-    /// <summary>The building name for the calendar subtitle (e.g., "Century Middle School").</summary>
+    /// <summary>The building name for the calendar subtitle.</summary>
     public string? BuildingName { get; init; }
 
     /// <summary>The serving session name (e.g., "Lunch", "Breakfast") for the calendar title.</summary>

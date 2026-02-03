@@ -21,6 +21,7 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | Dependency injection | Microsoft.Extensions.DependencyInjection 10.x |
 | HTTP | Microsoft.Extensions.Http 10.x (typed `HttpClient`) |
 | Logging | Serilog.Extensions.Logging 9.x, Serilog.Sinks.File 7.x |
+| QR code generation | QRCoder 1.x |
 | Serialization | System.Text.Json (built-in) |
 
 ## File Map
@@ -28,20 +29,21 @@ The application follows **WPF + MVVM + Dependency Injection**:
 ### Entry Point
 | File | Purpose |
 |---|---|
-| `App.xaml.cs` | Configures DI container, Serilog file logging (14-day rolling), registers all services and views |
+| `App.xaml.cs` | Configures DI container, Serilog file logging (14-day rolling), registers all services and views. HTTP clients: `LinqConnectApiService`, `DayLabelFetchService`. |
 
 ### Views
 | File | Purpose |
 |---|---|
-| `MainWindow.xaml` | WPF layout: left sidebar (school lookup, month/year selectors, session selector, categorized theme dropdown with headers, collapsible allergen filter, not-preferred/favorite checklists, forced home days, action buttons), right pane (WebBrowser preview, status bar with Open in Browser button). App icon via `Icon="Assets/logo.ico"`. |
-| `MainWindow.xaml.cs` | Code-behind: wires DataContext, navigates WebBrowser on HTML change, handles drag-drop for HAR files |
-| `Converters/BoolToVisibilityConverter.cs` | `bool` to `Visibility` for progress bar |
+| `MainWindow.xaml` | WPF layout: 300px left sidebar (school lookup, month/year selectors, session selector, categorized theme dropdown with headers, collapsible allergen filter, not-preferred/favorite checklists, forced home days, collapsible holiday icons editor, day layout mode selector with show-unsafe-lines option, plan icons/reorder/edit-mode labels, cross-out past days checkbox, share link on calendar checkbox, collapsible day labels editor with corner/start-date/entries/Fetch from CMS button, action buttons), right pane (WebBrowser preview, status bar with +/− zoom buttons, Open in Browser button, and View Source button). Default size 1100×800, opens maximized. App icon via `Icon="Assets/logo.ico"`. |
+| `MainWindow.xaml.cs` | Code-behind: wires DataContext, navigates WebBrowser on HTML change, handles drag-drop for HAR files, plan label TextBox auto-focus/select-all on edit mode enter, Enter key to confirm label edit |
+| `Converters/BoolToVisibilityConverter.cs` | `bool` to `Visibility`: true=Visible, false=Collapsed |
+| `Converters/BoolToCollapsedConverter.cs` | Inverse `bool` to `Visibility`: true=Collapsed, false=Visible (used for view/edit mode toggle) |
 | `Converters/NullToVisibilityConverter.cs` | `null` to `Visible`/`Collapsed` for preview placeholder vs. WebBrowser |
 
 ### View Models
 | File | Purpose |
 |---|---|
-| `ViewModels/MainViewModel.cs` | Coordinates fetch/load/generate workflow. Contains helper types: `AllergenOption`, `MonthOption`, `NotPreferredOption`, `FavoriteOption`, `ThemeListItem`, `ForcedHomeDayOption`. Manages categorized theme list with headers, hidden theme filtering, theme selection, allergen expander state, allergen-based recipe filtering, per-session forced home days, and debounced settings persistence. |
+| `ViewModels/MainViewModel.cs` | Coordinates fetch/load/generate workflow. Contains helper types: `AllergenOption`, `MonthOption`, `NotPreferredOption`, `FavoriteOption`, `ThemeListItem`, `ForcedHomeDayOption`, `HolidayOverrideEntry`, `PlanLabelEntry` (with view/edit mode, display label, icon), `LayoutModeOption`, `DayLabelEntry`. Manages categorized theme list with headers, hidden theme filtering, theme selection, allergen expander state, allergen-based recipe filtering, per-session forced home days, layout mode selection (List/IconsLeft/IconsRight), plan icon editing, plan label edit/reset commands, plan reorder commands, show unsafe lines toggle, cross-out past days toggle (3 PM cutoff via `GetPastDayCutoff()`), share footer toggle, rotating day label cycle editing (add/remove entries, start date, corner position, CMS fetch via `FetchDayLabelsCommand`), preview zoom (+/− commands, preview-only injection), holiday override editing, district name persistence, source link, and debounced settings persistence with flush-on-session-switch (uses `ConfigureAwait(false)` to avoid deadlock). |
 
 ### Models -- API DTOs
 | File | Purpose |
@@ -58,7 +60,7 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | `Models/ProcessedMonth.cs` | Collection of `ProcessedDay` for a calendar month, with `BuildingName`, `SessionName`, and computed `DisplayName`. |
 | `Models/RecipeItem.cs` | `record RecipeItem(string Name, bool ContainsAllergen, bool IsNotPreferred, bool IsFavorite)` |
 | `Models/CalendarTheme.cs` | `CalendarTheme` record with color/emoji/category properties for themed calendar output. `CalendarThemes.All` provides 21 built-in themes across 3 categories (Seasonal, Fun, Basic) with optional month auto-suggestion. |
-| `Models/AppSettings.cs` | Persisted settings: selected allergen IDs, per-session forced home days, per-session not-preferred/favorites, school identifiers, selected theme name, hidden theme names |
+| `Models/AppSettings.cs` | Persisted settings: selected allergen IDs, per-session forced home days, per-session not-preferred/favorites, school identifiers, district name, selected theme name, hidden theme names, layout mode (`LayoutMode`), plan label overrides, plan icon overrides (`PlanIconOverrides`), plan display order (`PlanDisplayOrder`), holiday overrides, `CrossOutPastDays`, `ShowShareFooter`, `DayLabelCycle`/`DayLabelStartDate`/`DayLabelCorner` for rotating day labels. Legacy `ShowMealButtons` kept for migration. Also defines `HolidayOverride` and `DayLabel` classes. |
 | `Models/MenuCache.cs` | Disk cache for menu response, allergen list, and identifier response with timestamp |
 
 ### Services
@@ -70,8 +72,10 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | `Services/HarFileService.cs` | Parses `FamilyMenu`, `FamilyAllergy`, and `FamilyMenuIdentifier` responses from HAR JSON entries |
 | `Services/IMenuAnalyzer.cs` | Interface for menu analysis |
 | `Services/MenuAnalyzer.cs` | Finds the selected session, iterates all menu plans dynamically, extracts entree-category recipes, checks allergen UUIDs, and applies not-preferred/favorite flags |
-| `Services/ICalendarHtmlGenerator.cs` | Interface for HTML generation |
-| `Services/CalendarHtmlGenerator.cs` | Builds self-contained HTML with themed inline CSS, per-plan color-coded badges, Monday-Friday calendar grid, favorite highlighting, holiday-specific no-school emoji, 🏠 "From Home" badges (forced home days + no safe options), and print styles |
+| `Services/ICalendarHtmlGenerator.cs` | Interface for HTML generation. Also defines `CalendarRenderOptions` with layout mode, plan label/icon overrides, plan display order, show-unsafe-lines option, unsafe line message, home badge color (set internally from theme), holiday overrides, cross-out past days toggle with today's date, rotating day label cycle with anchor date and corner position, share footer toggle, and source URL for QR code. |
+| `Services/CalendarHtmlGenerator.cs` | Builds self-contained HTML with themed inline CSS, per-plan color-coded badges, Monday-Friday calendar grid, favorite highlighting, configurable holiday no-school emoji (vertically centered), 🏠 "From Home" badges (forced home days + no safe options), three layout modes (List/IconsLeft/IconsRight grid with tinted row backgrounds), optional unsafe line display, past-day overlay (opacity fade + X), rotating corner triangle day labels, optional share footer with dual QR codes (source menu + GitHub, generated via QRCoder as base64 PNGs), and print styles. Zoom is not embedded -- applied externally by the view model for preview only. |
+| `Services/IDayLabelFetchService.cs` | Interface for fetching day labels from external calendar. Also defines `DayLabelFetchResult`. |
+| `Services/DayLabelFetchService.cs` | Scrapes Red/White Day entries from the ISD194 Finalsite CMS calendar HTML using source-generated regex. Typed `HttpClient` via DI. |
 | `Services/ISettingsService.cs` | Interface for settings and cache persistence |
 | `Services/SettingsService.cs` | Reads/writes `settings.json` and `menu-cache.json` next to the executable |
 
@@ -105,13 +109,18 @@ The application follows **WPF + MVVM + Dependency Injection**:
    MenuAnalyzer.Analyze(menuResponse, allergenIds, notPreferred, favorites, year, month, session, building)
        --> ProcessedMonth (list of ProcessedDay, each with per-plan ProcessedLines)
 
-4. CalendarHtmlGenerator.Generate(processedMonth, allergenNames, forcedHomeDays, theme)
+4. CalendarHtmlGenerator.Generate(processedMonth, allergenNames, forcedHomeDays, theme, renderOptions)
        --> Self-contained themed HTML string with:
-           - Holiday-specific emoji on no-school days
+           - Configurable holiday-specific emoji on no-school days (vertically centered, user overrides checked first)
            - 🏠 "From Home" badges (on forced home days or when no safe options)
+           - Three layout modes: List (stacked badges), IconsLeft/IconsRight (CSS grid with icon buttons)
+           - Optional past-day overlay (faded + X) when CrossOutPastDays is enabled
+           - Optional rotating corner triangle day labels (cycle assigned across school days, skipping no-school)
+           - Optional share footer with dual QR codes (source menu page + GitHub project)
 
-5. HTML is saved to %TEMP%/SchoolLunchMenu/ and displayed in the WPF WebBrowser control.
-   User can click "Open in Browser" to launch the file in their default browser.
+5. HTML is saved to %TEMP%/SchoolLunchMenu/ (clean, no zoom) and displayed in the WPF WebBrowser
+   control with preview zoom injected (CSS zoom on body tag, default 75%). Zoom is adjustable via
+   +/− buttons without regenerating. User can click "Open in Browser" to launch the clean file.
 ```
 
 ## Settings Persistence
@@ -128,6 +137,19 @@ Settings are saved to `settings.json` with 500ms debounce on any change:
 | `SelectedSessionName` | Last selected serving session |
 | `SelectedThemeName` | Last selected calendar theme name |
 | `HiddenThemeNames` | List of theme names to hide from dropdown (edit settings.json directly) |
+| `LayoutMode` | Calendar layout mode: `"List"`, `"IconsLeft"`, or `"IconsRight"` |
+| `PlanLabelOverrides` | Custom short labels for plan line names |
+| `PlanIconOverrides` | Custom emoji icons per plan line |
+| `PlanDisplayOrder` | User-defined display order for plan lines |
+| `ShowUnsafeLines` | Whether to show grayed-out buttons for unsafe plan lines (grid mode) |
+| `UnsafeLineMessage` | Custom message shown next to grayed-out unsafe line buttons (default: "No safe options") |
+| `HolidayOverrides` | Custom emoji and messages for no-school day keywords (editable in UI or settings.json) |
+| `CrossOutPastDays` | Whether to fade and X-out past days on the calendar |
+| `DayLabelCycle` | List of `{ Label, Color }` entries defining the rotating day label cycle |
+| `DayLabelStartDate` | Anchor date for the day label cycle (M/d/yyyy, null = first school day) |
+| `DayLabelCorner` | Corner for the day label triangle: `TopRight`, `TopLeft`, `BottomRight`, `BottomLeft` |
+| `ShowShareFooter` | Whether to append a share footer with dual QR codes to the calendar |
+| `DistrictName` | Persisted district display name for immediate display on launch |
 
 Menu data is cached separately in `menu-cache.json` for instant startup preloading.
 
