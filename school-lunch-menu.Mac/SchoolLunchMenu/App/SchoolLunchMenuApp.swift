@@ -12,17 +12,12 @@ struct SchoolLunchMenuApp: App {
         .commands {
             // App menu - About
             CommandGroup(replacing: .appInfo) {
-                Button("About School Lunch Menu") {
-                    showAboutWindow()
-                }
+                AboutButton()
             }
 
             // File menu commands
             CommandGroup(replacing: .newItem) {
-                Button("Open HAR File...") {
-                    openHarFile()
-                }
-                .keyboardShortcut("o", modifiers: .command)
+                OpenHarFileButton()
             }
 
             // View menu commands
@@ -51,28 +46,35 @@ struct SchoolLunchMenuApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
     }
+}
 
-    /// Opens a file dialog to select a HAR file.
-    private func openHarFile() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.init(filenameExtension: "har")!]
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.message = "Select a HAR file containing LINQ Connect API responses"
-        panel.prompt = "Open"
+/// Button that opens the About window using SwiftUI's openWindow environment.
+struct AboutButton: View {
+    @Environment(\.openWindow) private var openWindow
 
-        if panel.runModal() == .OK, let url = panel.url {
-            NotificationCenter.default.post(name: .openHarFile, object: url)
+    var body: some View {
+        Button("About School Lunch Menu") {
+            openWindow(id: "about")
         }
     }
+}
 
-    /// Shows the About window.
-    private func showAboutWindow() {
-        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "about" }) {
-            window.makeKeyAndOrderFront(nil)
-        } else {
-            NSApp.sendAction(Selector(("showAboutWindow:")), to: nil, from: nil)
+/// Button that opens a HAR file using NSOpenPanel.
+struct OpenHarFileButton: View {
+    var body: some View {
+        Button("Open HAR File...") {
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.init(filenameExtension: "har")!]
+            panel.allowsMultipleSelection = false
+            panel.canChooseDirectories = false
+            panel.message = "Select a HAR file containing LINQ Connect API responses"
+            panel.prompt = "Open"
+
+            if panel.runModal() == .OK, let url = panel.url {
+                NotificationCenter.default.post(name: .openHarFile, object: url)
+            }
         }
+        .keyboardShortcut("o", modifiers: .command)
     }
 }
 

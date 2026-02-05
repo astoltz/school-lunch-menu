@@ -41,15 +41,14 @@ struct AboutView: View {
                 .foregroundColor(.secondary)
                 .font(.caption)
 
-            Spacer()
-
             // Copyright
             Text("© 2024-2025")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+                .padding(.top, 10)
         }
         .padding(30)
-        .frame(width: 350, height: 450)
+        .frame(width: 350)
     }
 
     private func buildInfoRow(_ label: String, _ value: String) -> some View {
