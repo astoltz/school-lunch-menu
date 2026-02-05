@@ -1,0 +1,472 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00000001230000000001 /* SchoolLunchMenuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000001 /* SchoolLunchMenuApp.swift */; };
+		00000001230000000022 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000023 /* BuildInfo.swift */; };
+		00000001230000000023 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000024 /* AboutView.swift */; };
+		00000001230000000002 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000002 /* MainView.swift */; };
+		00000001230000000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000003 /* SidebarView.swift */; };
+		00000001230000000004 /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000004 /* PreviewView.swift */; };
+		00000001230000000005 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000005 /* MainViewModel.swift */; };
+		00000001230000000006 /* FamilyMenuResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000006 /* FamilyMenuResponse.swift */; };
+		00000001230000000007 /* FamilyMenuIdentifierResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000007 /* FamilyMenuIdentifierResponse.swift */; };
+		00000001230000000008 /* FamilyAllergyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000008 /* FamilyAllergyResponse.swift */; };
+		00000001230000000009 /* FamilyMenuMealsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000009 /* FamilyMenuMealsResponse.swift */; };
+		00000001230000000010 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000010 /* AppSettings.swift */; };
+		00000001230000000011 /* CalendarTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000011 /* CalendarTheme.swift */; };
+		00000001230000000012 /* ProcessedDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000012 /* ProcessedDay.swift */; };
+		00000001230000000013 /* ProcessedMonth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000013 /* ProcessedMonth.swift */; };
+		00000001230000000014 /* RecipeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000014 /* RecipeItem.swift */; };
+		00000001230000000015 /* MenuCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000015 /* MenuCache.swift */; };
+		00000001230000000016 /* LinqConnectApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000016 /* LinqConnectApiService.swift */; };
+		00000001230000000017 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000017 /* SettingsService.swift */; };
+		00000001230000000018 /* MenuAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000018 /* MenuAnalyzer.swift */; };
+		00000001230000000019 /* CalendarHtmlGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000019 /* CalendarHtmlGenerator.swift */; };
+		00000001230000000020 /* HarFileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000020 /* HarFileService.swift */; };
+		00000001230000000021 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000001210000000021 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00000001200000000001 /* SchoolLunchMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SchoolLunchMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		00000001210000000001 /* SchoolLunchMenuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolLunchMenuApp.swift; sourceTree = "<group>"; };
+		00000001210000000002 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		00000001210000000003 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		00000001210000000004 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+		00000001210000000005 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
+		00000001210000000006 /* FamilyMenuResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMenuResponse.swift; sourceTree = "<group>"; };
+		00000001210000000007 /* FamilyMenuIdentifierResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMenuIdentifierResponse.swift; sourceTree = "<group>"; };
+		00000001210000000008 /* FamilyAllergyResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyAllergyResponse.swift; sourceTree = "<group>"; };
+		00000001210000000009 /* FamilyMenuMealsResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMenuMealsResponse.swift; sourceTree = "<group>"; };
+		00000001210000000010 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		00000001210000000011 /* CalendarTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTheme.swift; sourceTree = "<group>"; };
+		00000001210000000012 /* ProcessedDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessedDay.swift; sourceTree = "<group>"; };
+		00000001210000000013 /* ProcessedMonth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessedMonth.swift; sourceTree = "<group>"; };
+		00000001210000000014 /* RecipeItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeItem.swift; sourceTree = "<group>"; };
+		00000001210000000015 /* MenuCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCache.swift; sourceTree = "<group>"; };
+		00000001210000000016 /* LinqConnectApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinqConnectApiService.swift; sourceTree = "<group>"; };
+		00000001210000000017 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
+		00000001210000000018 /* MenuAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuAnalyzer.swift; sourceTree = "<group>"; };
+		00000001210000000019 /* CalendarHtmlGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarHtmlGenerator.swift; sourceTree = "<group>"; };
+		00000001210000000020 /* HarFileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarFileService.swift; sourceTree = "<group>"; };
+		00000001210000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		00000001210000000022 /* SchoolLunchMenu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SchoolLunchMenu.entitlements; sourceTree = "<group>"; };
+		00000001210000000023 /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
+		00000001210000000024 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00000001400000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		00000001100000000001 = {
+			isa = PBXGroup;
+			children = (
+				00000001110000000001 /* SchoolLunchMenu */,
+				00000001100000000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		00000001100000000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00000001200000000001 /* SchoolLunchMenu.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		00000001110000000001 /* SchoolLunchMenu */ = {
+			isa = PBXGroup;
+			children = (
+				00000001110000000002 /* App */,
+				00000001110000000003 /* Models */,
+				00000001110000000004 /* ViewModels */,
+				00000001110000000005 /* Views */,
+				00000001110000000006 /* Services */,
+				00000001110000000007 /* Resources */,
+				00000001210000000022 /* SchoolLunchMenu.entitlements */,
+			);
+			path = SchoolLunchMenu;
+			sourceTree = "<group>";
+		};
+		00000001110000000002 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000001 /* SchoolLunchMenuApp.swift */,
+				00000001210000000023 /* BuildInfo.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		00000001110000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				00000001110000000008 /* Api */,
+				00000001210000000010 /* AppSettings.swift */,
+				00000001210000000011 /* CalendarTheme.swift */,
+				00000001210000000012 /* ProcessedDay.swift */,
+				00000001210000000013 /* ProcessedMonth.swift */,
+				00000001210000000014 /* RecipeItem.swift */,
+				00000001210000000015 /* MenuCache.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		00000001110000000004 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000005 /* MainViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		00000001110000000005 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000002 /* MainView.swift */,
+				00000001210000000003 /* SidebarView.swift */,
+				00000001210000000004 /* PreviewView.swift */,
+				00000001210000000024 /* AboutView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		00000001110000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000016 /* LinqConnectApiService.swift */,
+				00000001210000000017 /* SettingsService.swift */,
+				00000001210000000018 /* MenuAnalyzer.swift */,
+				00000001210000000019 /* CalendarHtmlGenerator.swift */,
+				00000001210000000020 /* HarFileService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		00000001110000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000021 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		00000001110000000008 /* Api */ = {
+			isa = PBXGroup;
+			children = (
+				00000001210000000006 /* FamilyMenuResponse.swift */,
+				00000001210000000007 /* FamilyMenuIdentifierResponse.swift */,
+				00000001210000000008 /* FamilyAllergyResponse.swift */,
+				00000001210000000009 /* FamilyMenuMealsResponse.swift */,
+			);
+			path = Api;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		00000001300000000001 /* SchoolLunchMenu */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00000001500000000003 /* Build configuration list for PBXNativeTarget "SchoolLunchMenu" */;
+			buildPhases = (
+				00000001310000000001 /* Sources */,
+				00000001400000000001 /* Frameworks */,
+				00000001410000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SchoolLunchMenu;
+			productName = SchoolLunchMenu;
+			productReference = 00000001200000000001 /* SchoolLunchMenu.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		00000001000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					00000001300000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 00000001500000000001 /* Build configuration list for PBXProject "SchoolLunchMenu" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 00000001100000000001;
+			productRefGroup = 00000001100000000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				00000001300000000001 /* SchoolLunchMenu */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		00000001410000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000001230000000021 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00000001310000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000001230000000001 /* SchoolLunchMenuApp.swift in Sources */,
+				00000001230000000022 /* BuildInfo.swift in Sources */,
+				00000001230000000002 /* MainView.swift in Sources */,
+				00000001230000000003 /* SidebarView.swift in Sources */,
+				00000001230000000004 /* PreviewView.swift in Sources */,
+				00000001230000000023 /* AboutView.swift in Sources */,
+				00000001230000000005 /* MainViewModel.swift in Sources */,
+				00000001230000000006 /* FamilyMenuResponse.swift in Sources */,
+				00000001230000000007 /* FamilyMenuIdentifierResponse.swift in Sources */,
+				00000001230000000008 /* FamilyAllergyResponse.swift in Sources */,
+				00000001230000000009 /* FamilyMenuMealsResponse.swift in Sources */,
+				00000001230000000010 /* AppSettings.swift in Sources */,
+				00000001230000000011 /* CalendarTheme.swift in Sources */,
+				00000001230000000012 /* ProcessedDay.swift in Sources */,
+				00000001230000000013 /* ProcessedMonth.swift in Sources */,
+				00000001230000000014 /* RecipeItem.swift in Sources */,
+				00000001230000000015 /* MenuCache.swift in Sources */,
+				00000001230000000016 /* LinqConnectApiService.swift in Sources */,
+				00000001230000000017 /* SettingsService.swift in Sources */,
+				00000001230000000018 /* MenuAnalyzer.swift in Sources */,
+				00000001230000000019 /* CalendarHtmlGenerator.swift in Sources */,
+				00000001230000000020 /* HarFileService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00000001510000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		00000001510000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		00000001520000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SchoolLunchMenu/SchoolLunchMenu.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "School Lunch Menu";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.schoollunchmenu.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		00000001520000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SchoolLunchMenu/SchoolLunchMenu.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "School Lunch Menu";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.schoollunchmenu.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		00000001500000000001 /* Build configuration list for PBXProject "SchoolLunchMenu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00000001510000000001 /* Debug */,
+				00000001510000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00000001500000000003 /* Build configuration list for PBXNativeTarget "SchoolLunchMenu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00000001520000000001 /* Debug */,
+				00000001520000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 00000001000000000001 /* Project object */;
+}

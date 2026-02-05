@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/SchoolLunchMenu/SchoolLunchMenu.csproj" />
+  <Folder Name="/Windows/">
+    <Project Path="school-lunch-menu.Windows/SchoolLunchMenu.csproj" />
   </Folder>
 </Solution>

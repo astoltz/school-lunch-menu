@@ -1,0 +1,82 @@
+name: Swift Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: macos-14
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Inject Build Info
+        run: |
+          cd school-lunch-menu.Mac
+
+          # Get version info
+          VERSION="1.0.0"
+          GIT_COMMIT="${GITHUB_SHA::7}"
+          GIT_BRANCH="${GITHUB_REF_NAME}"
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
+
+          # Update BuildInfo.swift
+          sed -i '' "s/static let version = \".*\"/static let version = \"$VERSION\"/" SchoolLunchMenu/App/BuildInfo.swift
+          sed -i '' "s/static let gitCommit = \".*\"/static let gitCommit = \"$GIT_COMMIT\"/" SchoolLunchMenu/App/BuildInfo.swift
+          sed -i '' "s/static let gitBranch = \".*\"/static let gitBranch = \"$GIT_BRANCH\"/" SchoolLunchMenu/App/BuildInfo.swift
+          sed -i '' "s/static let buildDate = \".*\"/static let buildDate = \"$BUILD_DATE\"/" SchoolLunchMenu/App/BuildInfo.swift
+          sed -i '' "s/static let buildNumber = \".*\"/static let buildNumber = \"$BUILD_NUMBER\"/" SchoolLunchMenu/App/BuildInfo.swift
+
+          # Update Info.plist version
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" SchoolLunchMenu/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" SchoolLunchMenu/Info.plist 2>/dev/null || true
+
+          echo "Build info injected:"
+          cat SchoolLunchMenu/App/BuildInfo.swift
+
+      - name: Build
+        run: |
+          cd school-lunch-menu.Mac
+          xcodebuild -project SchoolLunchMenu.xcodeproj \
+            -scheme SchoolLunchMenu \
+            -configuration ${{ matrix.configuration }} \
+            -destination 'platform=macOS' \
+            build
+
+      - name: Archive (Release only)
+        if: matrix.configuration == 'Release'
+        run: |
+          cd school-lunch-menu.Mac
+          xcodebuild -project SchoolLunchMenu.xcodeproj \
+            -scheme SchoolLunchMenu \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath build/SchoolLunchMenu.xcarchive \
+            archive
+
+      - name: Export App (Release only)
+        if: matrix.configuration == 'Release'
+        run: |
+          cd school-lunch-menu.Mac
+          xcodebuild -exportArchive \
+            -archivePath build/SchoolLunchMenu.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist ExportOptions.plist || true
+
+      - name: Upload artifact (Release only)
+        if: matrix.configuration == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SchoolLunchMenu-macOS
+          path: school-lunch-menu.Mac/build/SchoolLunchMenu.xcarchive

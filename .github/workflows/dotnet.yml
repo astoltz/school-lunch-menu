@@ -23,13 +23,41 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore src/SchoolLunchMenu/SchoolLunchMenu.csproj -r win-x64
+        run: dotnet restore school-lunch-menu.Windows/SchoolLunchMenu.csproj -r win-x64
 
       - name: Build
-        run: dotnet build src/SchoolLunchMenu/SchoolLunchMenu.csproj --configuration ${{ matrix.configuration }} --no-restore
+        run: |
+          $version = "1.0.0"
+          $gitCommit = "${{ github.sha }}".Substring(0, 7)
+          $gitBranch = "${{ github.ref_name }}"
+          $buildNumber = "${{ github.run_number }}"
+
+          dotnet build school-lunch-menu.Windows/SchoolLunchMenu.csproj `
+            --configuration ${{ matrix.configuration }} `
+            --no-restore `
+            -p:Version=$version `
+            -p:AssemblyVersion=$version.0 `
+            -p:FileVersion=$version.$buildNumber `
+            -p:InformationalVersion="$version+$gitCommit ($gitBranch)"
 
       - name: Publish
-        run: dotnet publish src/SchoolLunchMenu/SchoolLunchMenu.csproj --configuration ${{ matrix.configuration }} --self-contained -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/${{ matrix.configuration }}
+        run: |
+          $version = "1.0.0"
+          $gitCommit = "${{ github.sha }}".Substring(0, 7)
+          $gitBranch = "${{ github.ref_name }}"
+          $buildNumber = "${{ github.run_number }}"
+
+          dotnet publish school-lunch-menu.Windows/SchoolLunchMenu.csproj `
+            --configuration ${{ matrix.configuration }} `
+            --self-contained `
+            -r win-x64 `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:Version=$version `
+            -p:AssemblyVersion=$version.0 `
+            -p:FileVersion=$version.$buildNumber `
+            -p:InformationalVersion="$version+$gitCommit ($gitBranch)" `
+            -o publish/${{ matrix.configuration }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
