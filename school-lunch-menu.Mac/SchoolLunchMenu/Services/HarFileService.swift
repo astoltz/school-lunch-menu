@@ -42,6 +42,9 @@ class HarFileService {
 
         /// The menu identifier response containing district and building info.
         let identifier: FamilyMenuIdentifierResponse
+
+        /// The User-Agent string extracted from the first LinqConnect API request, if found.
+        let userAgent: String?
     }
 
     /// Loads and parses LINQ Connect API responses from a HAR file.
@@ -88,6 +91,7 @@ class HarFileService {
         var menu: FamilyMenuResponse?
         var allergies: [AllergyItem]?
         var identifier: FamilyMenuIdentifierResponse?
+        var userAgent: String?
 
         let decoder = JSONDecoder()
 
@@ -99,6 +103,21 @@ class HarFileService {
                   let text = content["text"] as? String,
                   !text.isEmpty else {
                 continue
+            }
+
+            // Extract User-Agent from the first LinqConnect API request
+            if userAgent == nil && urlString.contains("linqconnect.com"),
+               let headers = request["headers"] as? [[String: Any]] {
+                for header in headers {
+                    if let name = header["name"] as? String,
+                       name.caseInsensitiveCompare("User-Agent") == .orderedSame,
+                       let value = header["value"] as? String,
+                       !value.isEmpty {
+                        userAgent = value
+                        logger.info("Extracted User-Agent from HAR: \(value)")
+                        break
+                    }
+                }
             }
 
             guard let textData = text.data(using: .utf8) else {
@@ -141,7 +160,8 @@ class HarFileService {
         return HarParseResult(
             menu: menuResult,
             allergies: allergiesResult,
-            identifier: identifierResult
+            identifier: identifierResult,
+            userAgent: userAgent
         )
     }
 }

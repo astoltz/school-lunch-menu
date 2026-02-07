@@ -211,6 +211,9 @@ public partial class MainViewModel : ObservableObject
     private bool _showShareFooter;
 
     [ObservableProperty]
+    private bool _dayLabelsEnabled = true;
+
+    [ObservableProperty]
     private string _dayLabelStartDate = "";
 
     [ObservableProperty]
@@ -311,6 +314,8 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnShowShareFooterChanged(bool value) => ScheduleSettingsSave();
 
+    partial void OnDayLabelsEnabledChanged(bool value) => ScheduleSettingsSave();
+
     partial void OnDayLabelStartDateChanged(string value) => ScheduleSettingsSave();
 
     partial void OnDayLabelCornerChanged(string value) => ScheduleSettingsSave();
@@ -387,6 +392,7 @@ public partial class MainViewModel : ObservableObject
 
         CrossOutPastDays = settings.CrossOutPastDays;
         ShowShareFooter = settings.ShowShareFooter;
+        DayLabelsEnabled = settings.DayLabelsEnabled;
         LoadDayLabelEntries(settings.DayLabelCycle, settings.DayLabelStartDate);
         DayLabelCorner = string.IsNullOrEmpty(settings.DayLabelCorner) ? "TopRight" : settings.DayLabelCorner;
 
@@ -424,7 +430,7 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var (menu, allergies, identifier) = await _harFileService.LoadFromHarFileAsync(harFilePath);
+            var (menu, allergies, identifier, harUserAgent) = await _harFileService.LoadFromHarFileAsync(harFilePath);
             _lastMenuResponse = menu;
             _lastIdentifierResponse = identifier;
 
@@ -434,6 +440,15 @@ public partial class MainViewModel : ObservableObject
             await PopulateAllergensAsync(allergies);
             PopulateSessions(menu);
             DetectMonthFromMenu(menu);
+
+            // If the HAR contained a User-Agent, save it to settings for future launches
+            if (!string.IsNullOrEmpty(harUserAgent))
+            {
+                var settings = await _settingsService.LoadAsync();
+                settings.UserAgent = harUserAgent;
+                await _settingsService.SaveAsync(settings);
+                _logger.LogInformation("Saved User-Agent from HAR file to settings: {UserAgent}", harUserAgent);
+            }
 
             // Persist to disk cache so it's available on next launch
             await _settingsService.SaveMenuCacheAsync(new MenuCache
@@ -536,9 +551,11 @@ public partial class MainViewModel : ObservableObject
             HolidayOverrides = BuildHolidayOverridesFromUi(),
             CrossOutPastDays = CrossOutPastDays,
             ShowShareFooter = ShowShareFooter,
+            DayLabelsEnabled = DayLabelsEnabled,
             DayLabelCycle = BuildDayLabelCycleFromUi(),
             DayLabelStartDate = string.IsNullOrWhiteSpace(DayLabelStartDate) ? null : DayLabelStartDate.Trim(),
-            DayLabelCorner = DayLabelCorner
+            DayLabelCorner = DayLabelCorner,
+            UserAgent = existing.UserAgent
         };
         await _settingsService.SaveAsync(settings).ConfigureAwait(false);
     }
@@ -795,7 +812,7 @@ public partial class MainViewModel : ObservableObject
             var crossOutPastDays = CrossOutPastDays;
             var showShareFooter = ShowShareFooter;
             var sourceUrl = SourceUrl;
-            var dayLabelCycle = BuildDayLabelCycleFromUi();
+            var dayLabelCycle = DayLabelsEnabled ? BuildDayLabelCycleFromUi() : [];
             var dayLabelStartDateStr = DayLabelStartDate;
             var dayLabelCorner = DayLabelCorner;
 

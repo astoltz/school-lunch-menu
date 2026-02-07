@@ -21,7 +21,7 @@ public class HarFileService : IHarFileService
     }
 
     /// <inheritdoc />
-    public async Task<(FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier)> LoadFromHarFileAsync(string harFilePath)
+    public async Task<(FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier, string? UserAgent)> LoadFromHarFileAsync(string harFilePath)
     {
         _logger.LogInformation("Loading HAR file from {Path}", harFilePath);
 
@@ -35,7 +35,7 @@ public class HarFileService : IHarFileService
     /// <summary>
     /// Parses the HAR JSON content and extracts API responses. Runs on a background thread.
     /// </summary>
-    private (FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier) ParseHarJson(string json)
+    private (FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier, string? UserAgent) ParseHarJson(string json)
     {
         using var doc = JsonDocument.Parse(json);
         var entries = doc.RootElement.GetProperty("log").GetProperty("entries");
@@ -43,10 +43,33 @@ public class HarFileService : IHarFileService
         FamilyMenuResponse? menu = null;
         List<AllergyItem>? allergies = null;
         FamilyMenuIdentifierResponse? identifier = null;
+        string? userAgent = null;
 
         foreach (var entry in entries.EnumerateArray())
         {
-            var url = entry.GetProperty("request").GetProperty("url").GetString() ?? "";
+            var request = entry.GetProperty("request");
+            var url = request.GetProperty("url").GetString() ?? "";
+
+            // Extract User-Agent from the first LinqConnect API request
+            if (userAgent is null && url.Contains("linqconnect.com", StringComparison.OrdinalIgnoreCase)
+                && request.TryGetProperty("headers", out var headers))
+            {
+                foreach (var header in headers.EnumerateArray())
+                {
+                    var name = header.GetProperty("name").GetString();
+                    if (string.Equals(name, "User-Agent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var value = header.GetProperty("value").GetString();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            userAgent = value;
+                            _logger.LogInformation("Extracted User-Agent from HAR: {UserAgent}", value);
+                        }
+                        break;
+                    }
+                }
+            }
+
             var responseContent = entry.GetProperty("response").GetProperty("content");
 
             if (!responseContent.TryGetProperty("text", out var textElement))
@@ -87,6 +110,6 @@ public class HarFileService : IHarFileService
         if (identifier is null)
             throw new InvalidOperationException("HAR file does not contain a FamilyMenuIdentifier response");
 
-        return (menu, allergies, identifier);
+        return (menu, allergies, identifier, userAgent);
     }
 }

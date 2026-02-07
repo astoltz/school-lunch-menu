@@ -70,11 +70,19 @@ Legend: Y = Implemented, N = Not implemented, P = Partial
 
 | Feature | WPF | Mac | Notes |
 |---|---|---|---|
+| Enable/disable toggle | Y | Y | |
 | Rotating day labels | Y | Y | |
 | Configurable corner position | Y | Y | |
 | Start date anchor | Y | Y | |
 | Add/remove labels | Y | Y | |
 | Fetch from CMS | Y | Y | |
+
+## HTTP & Data Loading
+
+| Feature | WPF | Mac | Notes |
+|---|---|---|---|
+| Configurable User-Agent | Y | Y | Firefox default, auto-populated from HAR |
+| HAR User-Agent extraction | Y | Y | Extracts UA from first linqconnect.com request |
 
 ## Settings Persistence
 

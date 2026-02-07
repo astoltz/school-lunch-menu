@@ -12,6 +12,10 @@ import AppKit
 class MainViewModel: ObservableObject {
     private let logger = Logger(subsystem: "com.schoollunchmenu", category: "MainViewModel")
 
+    // MARK: - Default User-Agent
+
+    private static let defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
+
     // MARK: - Services
 
     private let apiService = LinqConnectApiService()
@@ -19,7 +23,12 @@ class MainViewModel: ObservableObject {
     private let menuAnalyzer = MenuAnalyzer()
     private let calendarGenerator = CalendarHtmlGenerator()
     private let harFileService = HarFileService()
-    private let dayLabelFetchService = DayLabelFetchService()
+    private var dayLabelFetchService = DayLabelFetchService()
+
+    // MARK: - User-Agent
+
+    /// The current User-Agent string used for HTTP requests (not shown in UI).
+    private var userAgent: String = MainViewModel.defaultUserAgent
 
     // MARK: - Cached Responses
 
@@ -167,6 +176,9 @@ class MainViewModel: ObservableObject {
 
     // MARK: - Published Properties - Day Labels
 
+    @Published var dayLabelsEnabled = true {
+        didSet { scheduleSettingsSave() }
+    }
     @Published var dayLabelEntries: [DayLabelEntry] = []
     @Published var dayLabelStartDate = "" {
         didSet { scheduleSettingsSave() }
@@ -178,6 +190,10 @@ class MainViewModel: ObservableObject {
     // MARK: - Published Properties - Holiday Overrides
 
     @Published var holidayOverrideEntries: [HolidayOverrideEntry] = []
+
+    // MARK: - Published Properties - Alerts
+
+    @Published var showApiFetchFailedAlert = false
 
     // MARK: - Published Properties - Preview
 
@@ -263,6 +279,14 @@ class MainViewModel: ObservableObject {
         }
     }
 
+    // MARK: - User-Agent Methods
+
+    /// Applies the current userAgent to both API and day label fetch services.
+    private func applyUserAgent() async {
+        await apiService.setUserAgent(userAgent)
+        dayLabelFetchService.userAgent = userAgent
+    }
+
     // MARK: - Initialization Methods
 
     /// Loads persisted settings and attempts to preload cached menu data.
@@ -308,8 +332,15 @@ class MainViewModel: ObservableObject {
 
         crossOutPastDays = settings.crossOutPastDays
         showShareFooter = settings.showShareFooter
+        dayLabelsEnabled = settings.dayLabelsEnabled
         loadDayLabelEntries(dayLabels: settings.dayLabelCycle, startDate: settings.dayLabelStartDate)
         dayLabelCorner = settings.dayLabelCorner.isEmpty ? "TopRight" : settings.dayLabelCorner
+
+        // Restore User-Agent from settings (or keep Firefox default)
+        if let savedUserAgent = settings.userAgent, !savedUserAgent.isEmpty {
+            userAgent = savedUserAgent
+        }
+        await applyUserAgent()
 
         // Restore district name from settings (visible before cache loads)
         if let name = settings.districtName, !name.isEmpty {
@@ -445,6 +476,7 @@ class MainViewModel: ObservableObject {
         } catch {
             logger.error("Failed to fetch menu data from API: \(error.localizedDescription)")
             statusText = "Error: \(error.localizedDescription)"
+            showApiFetchFailedAlert = true
         }
 
         isBusy = false
@@ -469,6 +501,13 @@ class MainViewModel: ObservableObject {
             populateSessions(from: result.menu)
             detectMonthFromMenu(result.menu)
 
+            // If the HAR contained a User-Agent, adopt it for future requests
+            if let harUserAgent = result.userAgent, !harUserAgent.isEmpty {
+                userAgent = harUserAgent
+                await applyUserAgent()
+                logger.info("Adopted User-Agent from HAR file")
+            }
+
             // Persist to disk cache so it's available on next launch
             await settingsService.saveMenuCache(MenuCache(
                 savedAtUtc: Date(),
@@ -476,6 +515,9 @@ class MainViewModel: ObservableObject {
                 allergies: result.allergies,
                 identifierResponse: result.identifier
             ))
+
+            // Save settings (including new User-Agent if extracted from HAR)
+            await saveSettings()
 
             statusText = "HAR file loaded (\(result.allergies.count) allergens, \(result.identifier.districtName)). Click Generate to create calendar."
             logger.info("Loaded HAR file \(url.path) for \(result.identifier.districtName)")
@@ -526,7 +568,7 @@ class MainViewModel: ObservableObject {
             let crossOutPastDaysValue = crossOutPastDays
             let showShareFooterValue = showShareFooter
             let sourceUrlValue = sourceUrl
-            let dayLabelCycle = buildDayLabelCycleFromUi()
+            let dayLabelCycle = dayLabelsEnabled ? buildDayLabelCycleFromUi() : []
             let dayLabelStartDateStr = dayLabelStartDate
             let dayLabelCornerValue = dayLabelCorner
             let todayValue = Self.getPastDayCutoff()
@@ -668,9 +710,11 @@ class MainViewModel: ObservableObject {
         settings.holidayOverrides = buildHolidayOverridesFromUi()
         settings.crossOutPastDays = crossOutPastDays
         settings.showShareFooter = showShareFooter
+        settings.dayLabelsEnabled = dayLabelsEnabled
         settings.dayLabelCycle = buildDayLabelCycleFromUi()
         settings.dayLabelStartDate = dayLabelStartDate.trimmingCharacters(in: .whitespaces).isEmpty ? nil : dayLabelStartDate.trimmingCharacters(in: .whitespaces)
         settings.dayLabelCorner = dayLabelCorner
+        settings.userAgent = userAgent
 
         await settingsService.save(settings)
     }
@@ -1081,7 +1125,7 @@ class MainViewModel: ObservableObject {
                 for day in plan.days {
                     for meal in day.menuMeals {
                         for category in meal.recipeCategories {
-                            guard category.isEntree else { continue }
+                            guard category.isEntree != false else { continue }
                             for recipe in category.recipes {
                                 uniqueNames.insert(recipe.recipeName)
 

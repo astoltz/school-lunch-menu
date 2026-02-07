@@ -12,5 +12,5 @@ public interface IHarFileService
     /// </summary>
     /// <param name="harFilePath">Path to the HAR file.</param>
     /// <returns>Tuple of menu response, allergen list, and identifier response.</returns>
-    Task<(FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier)> LoadFromHarFileAsync(string harFilePath);
+    Task<(FamilyMenuResponse Menu, List<AllergyItem> Allergies, FamilyMenuIdentifierResponse Identifier, string? UserAgent)> LoadFromHarFileAsync(string harFilePath);
 }

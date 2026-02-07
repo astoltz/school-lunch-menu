@@ -150,7 +150,7 @@ public record RecipeCategory
     /// Whether this category represents an entree selection.
     /// </summary>
     [JsonPropertyName("IsEntree")]
-    public bool IsEntree { get; init; }
+    public bool IsEntree { get; init; } = true;
 
     /// <summary>
     /// The recipes available in this category.

@@ -104,7 +104,7 @@ struct RecipeCategory: Codable {
     let color: String
 
     /// Whether this category represents an entree selection.
-    let isEntree: Bool
+    let isEntree: Bool?
 
     /// The recipes available in this category.
     let recipes: [Recipe]

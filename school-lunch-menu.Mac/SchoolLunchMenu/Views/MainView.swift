@@ -29,6 +29,22 @@ struct MainView: View {
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             handleDrop(providers: providers)
         }
+        .alert("API Fetch Failed", isPresented: $viewModel.showApiFetchFailedAlert) {
+            if let sourceUrl = viewModel.sourceUrl, let url = URL(string: sourceUrl) {
+                Button("Open in Browser") {
+                    NSWorkspace.shared.open(url)
+                }
+                Button("Cancel", role: .cancel) {}
+            } else {
+                Button("OK", role: .cancel) {}
+            }
+        } message: {
+            if viewModel.sourceUrl != nil {
+                Text("The API request was blocked. You can open the LINQ Connect menu page in your browser and save a HAR file to load instead.")
+            } else {
+                Text("The API request was blocked. Try loading a HAR file instead.")
+            }
+        }
     }
 
     // MARK: - Drop Handling

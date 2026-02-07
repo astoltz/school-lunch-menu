@@ -1,6 +1,8 @@
+using System.Text.Json;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SchoolLunchMenu.Models;
 using SchoolLunchMenu.Services;
 using SchoolLunchMenu.ViewModels;
 using Serilog;
@@ -28,8 +30,12 @@ public partial class App : Application
                 retainedFileCountLimit: 14)
             .CreateLogger();
 
+        // Load User-Agent from settings before DI setup (read file directly to avoid DI chicken-and-egg)
+        var userAgent = LoadUserAgentFromSettings()
+            ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0";
+
         var services = new ServiceCollection();
-        ConfigureServices(services);
+        ConfigureServices(services, userAgent);
         _serviceProvider = services.BuildServiceProvider();
 
         // Pass the first command-line argument as a HAR file path if provided
@@ -49,9 +55,34 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// Reads the UserAgent field from settings.json without requiring DI services.
+    /// Returns null if the file doesn't exist or doesn't contain a UserAgent.
+    /// </summary>
+    private static string? LoadUserAgentFromSettings()
+    {
+        try
+        {
+            var settingsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "settings.json");
+            if (!System.IO.File.Exists(settingsPath))
+                return null;
+
+            var json = System.IO.File.ReadAllText(settingsPath);
+            var settings = JsonSerializer.Deserialize<AppSettings>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return string.IsNullOrEmpty(settings?.UserAgent) ? null : settings.UserAgent;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Registers all services, view models, and views with the DI container.
     /// </summary>
-    private static void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services, string userAgent)
     {
         // Logging
         services.AddLogging(builder =>
@@ -63,9 +94,15 @@ public partial class App : Application
 #endif
         });
 
-        // HTTP
-        services.AddHttpClient<ILinqConnectApiService, LinqConnectApiService>();
-        services.AddHttpClient<IDayLabelFetchService, DayLabelFetchService>();
+        // HTTP — configure User-Agent on all typed HttpClients
+        services.AddHttpClient<ILinqConnectApiService, LinqConnectApiService>(client =>
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        });
+        services.AddHttpClient<IDayLabelFetchService, DayLabelFetchService>(client =>
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        });
 
         // Services
         services.AddSingleton<IHarFileService, HarFileService>();

@@ -70,6 +70,9 @@ class AppSettings: Codable {
     /// Whether to visually cross out past days on the calendar.
     var crossOutPastDays: Bool = true
 
+    /// Whether to show day labels (e.g., Red/White Day) on the calendar.
+    var dayLabelsEnabled: Bool = true
+
     /// Rotating day label cycle definition. Each entry is a label with a color.
     /// Labels cycle in order across school days (skipping no-school days).
     /// E.g., [DayLabel(label: "Red", color: "#dc3545"), DayLabel(label: "White", color: "#adb5bd")]
@@ -90,6 +93,9 @@ class AppSettings: Codable {
 
     /// The district display name (e.g., "Lakeville Area Schools").
     var districtName: String? = "Lakeville Area Schools"
+
+    /// Custom User-Agent string for HTTP requests. Auto-populated from HAR file or uses Firefox default.
+    var userAgent: String?
 
     init() {}
 
@@ -115,11 +121,13 @@ class AppSettings: Codable {
         case unsafeLineMessage
         case holidayOverrides
         case crossOutPastDays
+        case dayLabelsEnabled
         case dayLabelCycle
         case dayLabelStartDate
         case dayLabelCorner
         case showShareFooter
         case districtName
+        case userAgent
     }
 }
 

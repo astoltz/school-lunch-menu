@@ -6,6 +6,9 @@ struct DayLabelFetchService {
     private static let calendarUrl = "https://cms.isd194.org/news-and-events/calendar"
     private static let logger = Logger(subsystem: "com.schoollunchmenu", category: "DayLabelFetchService")
 
+    /// Configurable User-Agent string for HTTP requests. Defaults to Firefox.
+    var userAgent: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
+
     /// Result of a day label fetch operation.
     struct FetchResult {
         /// Date-label pairs found on the calendar page, sorted by date.
@@ -22,7 +25,9 @@ struct DayLabelFetchService {
             throw URLError(.badURL)
         }
 
-        let (data, _) = try await URLSession.shared.data(from: url)
+        var request = URLRequest(url: url)
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        let (data, _) = try await URLSession.shared.data(for: request)
         guard let html = String(data: data, encoding: .utf8) else {
             throw URLError(.cannotDecodeContentData)
         }

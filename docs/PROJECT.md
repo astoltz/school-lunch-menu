@@ -45,7 +45,7 @@ The application follows **WPF + MVVM + Dependency Injection**:
 ### View Models
 | File | Purpose |
 |---|---|
-| `ViewModels/MainViewModel.cs` | Coordinates fetch/load/generate workflow. Contains helper types: `AllergenOption`, `MonthOption`, `NotPreferredOption`, `FavoriteOption`, `ThemeListItem`, `ForcedHomeDayOption`, `HolidayOverrideEntry`, `PlanLabelEntry` (with view/edit mode, display label, icon), `LayoutModeOption`, `DayLabelEntry`. Manages categorized theme list with headers, hidden theme filtering, theme selection, allergen expander state, allergen-based recipe filtering, per-session forced home days, layout mode selection (List/IconsLeft/IconsRight), plan icon editing, plan label edit/reset commands, plan reorder commands, show unsafe lines toggle, cross-out past days toggle (3 PM cutoff via `GetPastDayCutoff()`), share footer toggle, rotating day label cycle editing (add/remove entries, start date, corner position, CMS fetch via `FetchDayLabelsCommand`), preview zoom (+/− commands, preview-only injection), holiday override editing, district name persistence, source link, and debounced settings persistence with flush-on-session-switch (uses `ConfigureAwait(false)` to avoid deadlock). |
+| `ViewModels/MainViewModel.cs` | Coordinates fetch/load/generate workflow. Contains helper types: `AllergenOption`, `MonthOption`, `NotPreferredOption`, `FavoriteOption`, `ThemeListItem`, `ForcedHomeDayOption`, `HolidayOverrideEntry`, `PlanLabelEntry` (with view/edit mode, display label, icon), `LayoutModeOption`, `DayLabelEntry`. Manages categorized theme list with headers, hidden theme filtering, theme selection, allergen expander state, allergen-based recipe filtering, per-session forced home days, layout mode selection (List/IconsLeft/IconsRight), plan icon editing, plan label edit/reset commands, plan reorder commands, show unsafe lines toggle, cross-out past days toggle (3 PM cutoff via `GetPastDayCutoff()`), share footer toggle, day labels enable/disable toggle, rotating day label cycle editing (add/remove entries, start date, corner position, CMS fetch via `FetchDayLabelsCommand`), configurable User-Agent (Firefox default, auto-populated from HAR), preview zoom (+/− commands, preview-only injection), holiday override editing, district name persistence, source link, and debounced settings persistence with flush-on-session-switch (uses `ConfigureAwait(false)` to avoid deadlock). |
 
 ### Models -- API DTOs
 | File | Purpose |
@@ -62,7 +62,7 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | `Models/ProcessedMonth.cs` | Collection of `ProcessedDay` for a calendar month, with `BuildingName`, `SessionName`, and computed `DisplayName`. |
 | `Models/RecipeItem.cs` | `record RecipeItem(string Name, bool ContainsAllergen, bool IsNotPreferred, bool IsFavorite)` |
 | `Models/CalendarTheme.cs` | `CalendarTheme` record with color/emoji/category properties for themed calendar output. `CalendarThemes.All` provides 21 built-in themes across 3 categories (Seasonal, Fun, Basic) with optional month auto-suggestion. |
-| `Models/AppSettings.cs` | Persisted settings: selected allergen IDs, per-session forced home days, per-session not-preferred/favorites, school identifiers, district name, selected theme name, hidden theme names, layout mode (`LayoutMode`), plan label overrides, plan icon overrides (`PlanIconOverrides`), plan display order (`PlanDisplayOrder`), holiday overrides, `CrossOutPastDays`, `ShowShareFooter`, `DayLabelCycle`/`DayLabelStartDate`/`DayLabelCorner` for rotating day labels. Legacy `ShowMealButtons` kept for migration. Also defines `HolidayOverride` and `DayLabel` classes. |
+| `Models/AppSettings.cs` | Persisted settings: selected allergen IDs, per-session forced home days, per-session not-preferred/favorites, school identifiers, district name, selected theme name, hidden theme names, layout mode (`LayoutMode`), plan label overrides, plan icon overrides (`PlanIconOverrides`), plan display order (`PlanDisplayOrder`), holiday overrides, `CrossOutPastDays`, `ShowShareFooter`, `DayLabelsEnabled`/`DayLabelCycle`/`DayLabelStartDate`/`DayLabelCorner` for rotating day labels, `UserAgent` for configurable HTTP User-Agent. Legacy `ShowMealButtons` kept for migration. Also defines `HolidayOverride` and `DayLabel` classes. |
 | `Models/MenuCache.cs` | Disk cache for menu response, allergen list, and identifier response with timestamp |
 
 ### Services
@@ -71,7 +71,7 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | `Services/ILinqConnectApiService.cs` | Interface for LINQ Connect API calls |
 | `Services/LinqConnectApiService.cs` | HTTP client calling 4 API endpoints with 1-hour in-memory response caching. Date format: `M-d-yyyy`. |
 | `Services/IHarFileService.cs` | Interface for HAR file loading |
-| `Services/HarFileService.cs` | Parses `FamilyMenu`, `FamilyAllergy`, and `FamilyMenuIdentifier` responses from HAR JSON entries |
+| `Services/HarFileService.cs` | Parses `FamilyMenu`, `FamilyAllergy`, and `FamilyMenuIdentifier` responses from HAR JSON entries. Extracts User-Agent from the first linqconnect.com request headers. |
 | `Services/IMenuAnalyzer.cs` | Interface for menu analysis |
 | `Services/MenuAnalyzer.cs` | Finds the selected session, iterates all menu plans dynamically, extracts entree-category recipes, checks allergen UUIDs, and applies not-preferred/favorite flags |
 | `Services/ICalendarHtmlGenerator.cs` | Interface for HTML generation. Also defines `CalendarRenderOptions` with layout mode, plan label/icon overrides, plan display order, show-unsafe-lines option, unsafe line message, home badge color (set internally from theme), holiday overrides, cross-out past days toggle with today's date, rotating day label cycle with anchor date and corner position, share footer toggle, and source URL for QR code. |
@@ -158,11 +158,13 @@ Settings are saved to `settings.json` with 500ms debounce on any change:
 | `UnsafeLineMessage` | Custom message shown next to grayed-out unsafe line buttons (default: "No safe options") |
 | `HolidayOverrides` | Custom emoji and messages for no-school day keywords (editable in UI or settings.json) |
 | `CrossOutPastDays` | Whether to fade and X-out past days on the calendar |
+| `DayLabelsEnabled` | Whether to show day label triangles on the calendar (default: true) |
 | `DayLabelCycle` | List of `{ Label, Color }` entries defining the rotating day label cycle |
 | `DayLabelStartDate` | Anchor date for the day label cycle (M/d/yyyy, null = first school day) |
 | `DayLabelCorner` | Corner for the day label triangle: `TopRight`, `TopLeft`, `BottomRight`, `BottomLeft` |
 | `ShowShareFooter` | Whether to append a share footer with dual QR codes to the calendar |
 | `DistrictName` | Persisted district display name for immediate display on launch |
+| `UserAgent` | Custom User-Agent string for HTTP requests (null = Firefox default, auto-populated from HAR) |
 
 Menu data is cached separately in `menu-cache.json` for instant startup preloading.
 

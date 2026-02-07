@@ -413,6 +413,11 @@
                             <TextBlock Text="Day Labels (Red/White Day)" FontWeight="Bold" FontSize="13" />
                         </Expander.Header>
                         <StackPanel Margin="0,6,0,0">
+                            <CheckBox Content="Show day labels"
+                                      IsChecked="{Binding DayLabelsEnabled}"
+                                      ToolTip="Toggle day label triangles on the calendar"
+                                      Margin="0,0,0,6" />
+                            <StackPanel Visibility="{Binding DayLabelsEnabled, Converter={StaticResource BoolToVisibleConverter}, FallbackValue=Visible}">
                             <TextBlock Text="Labels rotate across school days in order. No-school days are skipped."
                                        TextWrapping="Wrap" FontSize="11" Foreground="#6c757d" Margin="0,0,0,6" />
                             <Button Content="Fetch from CMS"
@@ -463,6 +468,7 @@
                                     Command="{Binding AddDayLabelCommand}"
                                     Padding="8,4" Margin="0,4,0,0"
                                     FontSize="11" />
+                            </StackPanel>
                         </StackPanel>
                     </Expander>
 

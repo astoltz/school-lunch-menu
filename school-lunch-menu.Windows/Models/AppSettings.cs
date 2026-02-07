@@ -91,6 +91,9 @@ public class AppSettings
     /// <summary>Whether to visually cross out past days on the calendar.</summary>
     public bool CrossOutPastDays { get; set; } = true;
 
+    /// <summary>Whether to show day labels (e.g., Red/White Day) on the calendar.</summary>
+    public bool DayLabelsEnabled { get; set; } = true;
+
     /// <summary>
     /// Rotating day label cycle definition. Each entry is a label with a color.
     /// Labels cycle in order across school days (skipping no-school days).
@@ -118,6 +121,9 @@ public class AppSettings
 
     /// <summary>The district display name (e.g., "Lakeville Area Schools").</summary>
     public string? DistrictName { get; set; } = "Lakeville Area Schools";
+
+    /// <summary>Custom User-Agent string for HTTP requests. Auto-populated from HAR file or uses Firefox default.</summary>
+    public string? UserAgent { get; set; }
 }
 
 /// <summary>

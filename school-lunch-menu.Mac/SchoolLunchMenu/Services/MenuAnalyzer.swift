@@ -169,7 +169,7 @@ class MenuAnalyzer {
 
         for meal in menuDay.menuMeals {
             for category in meal.recipeCategories {
-                guard category.isEntree else { continue }
+                guard category.isEntree != false else { continue }
 
                 // Track whether the preceding parent entree contains an allergen,
                 // so "with ..." companion items inherit the parent's allergen status.

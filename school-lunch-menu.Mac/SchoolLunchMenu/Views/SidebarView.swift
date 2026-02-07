@@ -446,18 +446,24 @@ struct HolidayIconsSection: View {
 
     private var holidayEntries: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(viewModel.holidayOverrideEntries.indices, id: \.self) { index in
+            ForEach(viewModel.holidayOverrideEntries) { entry in
                 HStack {
-                    TextField("Keyword", text: $viewModel.holidayOverrideEntries[index].keyword)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 100)
+                    TextField("Keyword", text: Binding(
+                        get: { entry.keyword },
+                        set: { entry.keyword = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 100)
 
-                    TextField("Emoji", text: $viewModel.holidayOverrideEntries[index].emoji)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 50)
+                    TextField("Emoji", text: Binding(
+                        get: { entry.emoji },
+                        set: { entry.emoji = $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 50)
 
                     Button(action: {
-                        viewModel.removeHolidayOverride(viewModel.holidayOverrideEntries[index])
+                        viewModel.removeHolidayOverride(entry)
                     }) {
                         Image(systemName: "minus.circle.fill")
                             .foregroundColor(.red)
@@ -597,62 +603,70 @@ struct DayLabelsSection: View {
 
     private var dayLabelControls: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(action: {
-                Task {
-                    await viewModel.fetchDayLabels()
+            Toggle("Show day labels", isOn: $viewModel.dayLabelsEnabled)
+                .disabled(viewModel.isBusy)
+
+            if viewModel.dayLabelsEnabled {
+                Button(action: {
+                    Task {
+                        await viewModel.fetchDayLabels()
+                    }
+                }) {
+                    Label("Fetch from CMS", systemImage: "arrow.down.circle")
                 }
-            }) {
-                Label("Fetch from CMS", systemImage: "arrow.down.circle")
-            }
-            .buttonStyle(.bordered)
-            .disabled(viewModel.isBusy)
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isBusy)
 
-            Picker("Corner", selection: $viewModel.dayLabelCorner) {
-                ForEach(MainViewModel.dayLabelCornerOptions, id: \.self) { corner in
-                    Text(corner.replacingOccurrences(of: "Top", with: "Top ").replacingOccurrences(of: "Bottom", with: "Bottom ")).tag(corner)
+                Picker("Corner", selection: $viewModel.dayLabelCorner) {
+                    ForEach(MainViewModel.dayLabelCornerOptions, id: \.self) { corner in
+                        Text(corner.replacingOccurrences(of: "Top", with: "Top ").replacingOccurrences(of: "Bottom", with: "Bottom ")).tag(corner)
+                    }
                 }
-            }
-            .disabled(viewModel.isBusy)
+                .disabled(viewModel.isBusy)
 
-            HStack {
-                Text("Start Date")
-                    .font(.caption)
-                TextField("YYYY-MM-DD", text: $viewModel.dayLabelStartDate)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(viewModel.isBusy)
-            }
+                HStack {
+                    Text("Start Date")
+                        .font(.caption)
+                    TextField("M/d/yyyy", text: $viewModel.dayLabelStartDate)
+                        .textFieldStyle(.roundedBorder)
+                        .disabled(viewModel.isBusy)
+                }
 
-            ForEach(viewModel.dayLabelEntries.indices, id: \.self) { index in
-                dayLabelRow(index: index)
-            }
+                ForEach(viewModel.dayLabelEntries) { entry in
+                    dayLabelRow(entry: entry)
+                }
 
-            Button(action: {
-                viewModel.addDayLabel()
-            }) {
-                Label("Add Label", systemImage: "plus.circle.fill")
+                Button(action: {
+                    viewModel.addDayLabel()
+                }) {
+                    Label("Add Label", systemImage: "plus.circle.fill")
+                }
+                .buttonStyle(.borderless)
+                .disabled(viewModel.isBusy)
             }
-            .buttonStyle(.borderless)
-            .disabled(viewModel.isBusy)
         }
         .padding(.top, 4)
     }
 
-    private func dayLabelRow(index: Int) -> some View {
+    private func dayLabelRow(entry: DayLabelEntry) -> some View {
         HStack {
-            TextField("Label", text: $viewModel.dayLabelEntries[index].label)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 80)
-                .disabled(viewModel.isBusy)
+            TextField("Label", text: Binding(
+                get: { entry.label },
+                set: { entry.label = $0 }
+            ))
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 80)
+            .disabled(viewModel.isBusy)
 
             ColorPicker("", selection: Binding(
-                get: { Color(hex: viewModel.dayLabelEntries[index].color) ?? .gray },
-                set: { viewModel.dayLabelEntries[index].color = $0.hexString }
+                get: { Color(hex: entry.color) ?? .gray },
+                set: { entry.color = $0.hexString }
             ))
             .labelsHidden()
             .disabled(viewModel.isBusy)
 
             Button(action: {
-                viewModel.removeDayLabel(viewModel.dayLabelEntries[index])
+                viewModel.removeDayLabel(entry)
             }) {
                 Image(systemName: "minus.circle.fill")
                     .foregroundColor(.red)
@@ -668,9 +682,15 @@ struct DayLabelsSection: View {
                 .font(.headline)
 
             if !isExpanded {
-                Text(viewModel.dayLabelEntries.map(\.label).joined(separator: ", "))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if viewModel.dayLabelsEnabled {
+                    Text(viewModel.dayLabelEntries.map(\.label).joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Disabled")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }

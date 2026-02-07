@@ -10,6 +10,9 @@ actor LinqConnectApiService {
     private let urlSession: URLSession
     private let logger = Logger(subsystem: "com.schoollunchmenu", category: "LinqConnectApiService")
 
+    /// Configurable User-Agent string for HTTP requests. Defaults to Firefox.
+    var userAgent: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
+
     /// Cache storage with URL as key and tuple of (data, expiration date) as value
     private var cache: [String: (data: Data, expiresAt: Date)] = [:]
 
@@ -108,6 +111,7 @@ actor LinqConnectApiService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
 
         logger.debug("Fetching from API: \(urlString)")
 
@@ -140,6 +144,11 @@ actor LinqConnectApiService {
         logger.debug("Cached response for: \(urlString), expires at: \(expiresAt)")
 
         return decoded
+    }
+
+    /// Updates the User-Agent string used for subsequent requests.
+    func setUserAgent(_ value: String) {
+        userAgent = value
     }
 
     /// Clears all cached responses

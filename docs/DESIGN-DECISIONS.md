@@ -319,10 +319,12 @@ Labels are configured in the collapsible "Day Labels (Red/White Day)" expander i
 | Setting | Description |
 |---|---|
 | `CrossOutPastDays` | Whether to fade and X-out past days |
+| `DayLabelsEnabled` | Whether to show day label triangles (default: true) |
 | `DayLabelCycle` | List of `{ Label, Color }` entries defining the rotation |
 | `DayLabelStartDate` | Anchor date for the cycle (M/d/yyyy format, null = first school day) |
 | `DayLabelCorner` | Corner for the triangle: `TopRight`, `TopLeft`, `BottomRight`, `BottomLeft` |
 | `DistrictName` | Persisted district display name for immediate display on launch |
+| `UserAgent` | Custom User-Agent for HTTP requests (null = Firefox default) |
 
 ## CMS Day Label Fetch
 
@@ -404,6 +406,39 @@ The `AppSettings` class provides sensible defaults for a fresh install without a
 | `ShowUnsafeLines` | `true` | Show all plan lines even if unsafe |
 | `CrossOutPastDays` | `true` | Visual aid for tracking the current week |
 | `DayLabelCycle` | Red / White | ISD194 alternating schedule labels |
+
+## Configurable User-Agent
+
+Cloudflare blocks the default `URLSession` / `HttpClient` User-Agent strings, causing API fetch failures. Both platforms now use a configurable User-Agent:
+
+- **Default**: `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0` (Firefox)
+- **Auto-populated from HAR**: When a HAR file is loaded, the User-Agent is extracted from the first `linqconnect.com` request's headers and saved to settings. Subsequent API and CMS requests use this UA.
+- **No UI control**: The UA is not exposed in the sidebar. It auto-populates from HAR or uses the Firefox default. Power users can edit `settings.json` directly.
+- **Mac**: `LinqConnectApiService` (actor) uses a `setUserAgent()` method; `DayLabelFetchService` (struct) has a mutable `userAgent` property.
+- **Windows**: `HttpClient` UA is configured via `AddHttpClient<T>` lambdas in `App.xaml.cs`. Settings are read directly from `settings.json` before DI container construction since `SettingsService` requires DI-injected `ILogger`.
+
+| Setting | Description |
+|---|---|
+| `UserAgent` | Custom User-Agent for HTTP requests (null = Firefox default) |
+
+## Day Labels Enable/Disable
+
+The "Show day labels" toggle allows users to completely disable the rotating day label feature without deleting their label configuration:
+
+- **When disabled**: An empty `DayLabelCycle` is passed to the HTML generator (which already handles empty cycles by not rendering any triangles). The label configuration controls (corner, start date, entries, Fetch from CMS) are hidden in the sidebar.
+- **When re-enabled**: The previous label configuration is preserved and immediately active.
+- **Collapsed header**: Shows "Disabled" instead of the label list when the toggle is off.
+
+| Setting | Description |
+|---|---|
+| `DayLabelsEnabled` | Whether to show day label triangles on the calendar (default: true) |
+
+## IsEntree Default Behavior
+
+The LINQ Connect API omits the `IsEntree` field entirely from `RecipeCategory` responses rather than setting it to `true`. Both platforms handle this:
+
+- **Mac (Swift)**: `isEntree` is typed as `Bool?`. The guard uses `category.isEntree != false` so that `nil` (missing) and `true` both pass.
+- **Windows (C#)**: `IsEntree` defaults to `true` via `public bool IsEntree { get; init; } = true;`, so missing JSON fields deserialize as `true`.
 
 ## About Window
 

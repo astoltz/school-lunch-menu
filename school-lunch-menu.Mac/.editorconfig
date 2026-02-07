@@ -1,0 +1,9 @@
+# Swift EditorConfig
+# Note: Swift tooling support for .editorconfig varies.
+# Xcode does not natively read .editorconfig, but many editors (VS Code, etc.) do.
+# For Xcode-specific settings, configure in the project or use .swift-format.
+
+[*.swift]
+indent_style = space
+indent_size = 4
+max_line_length = 150
