@@ -404,3 +404,50 @@ The `AppSettings` class provides sensible defaults for a fresh install without a
 | `ShowUnsafeLines` | `true` | Show all plan lines even if unsafe |
 | `CrossOutPastDays` | `true` | Visual aid for tracking the current week |
 | `DayLabelCycle` | Red / White | ISD194 alternating schedule labels |
+
+## About Window
+
+Both platforms provide an About dialog following OS conventions:
+
+### Windows (WPF)
+
+- **Location**: Help > About School Lunch Menu (standard Windows menu bar placement)
+- **Implementation**: `AboutWindow.xaml` / `AboutWindow.xaml.cs` -- a modal `Window` with `Owner = MainWindow`
+- **Version info**: Parsed from `AssemblyInformationalVersionAttribute`, which CI sets to `1.0.0+abc1234 (branch)` format via `-p:InformationalVersion`. For local dev builds, `Directory.Build.props` runs `git rev-parse` to inject the same format.
+- **Credits**: LINQ Connect (data source), ISD 194 CMS Calendar (day labels), GitHub project page -- all as clickable `Hyperlink` elements using `Process.Start` with `UseShellExecute = true`.
+- **Menu bar**: The main window uses a `DockPanel` with a top-docked `Menu` containing Help > About. This follows Windows UX conventions (Help menu in the menu bar).
+
+### macOS (SwiftUI)
+
+- **Location**: App > About School Lunch Menu (standard macOS menu placement via `.openWindow`)
+- **Implementation**: `AboutView.swift` -- a SwiftUI view using `BuildInfo` (injected by Xcode build phase)
+- **Credits**: Same data sources as Windows, rendered as SwiftUI `Link` elements.
+
+## Test Suite
+
+The Windows project includes an xUnit test suite in `tests/SchoolLunchMenu.Tests/`:
+
+### Design Choices
+
+- **xUnit** -- the most widely used .NET test framework, with excellent IDE integration and parallel test execution.
+- **FluentAssertions** -- provides readable, expressive assertions (e.g., `result.Should().BeTrue()`) that produce clear failure messages.
+- **NSubstitute** -- lightweight mocking framework for interface substitution, used where services need to be isolated.
+- **NullLogger** -- tests use `NullLogger<T>.Instance` to satisfy `ILogger<T>` dependencies without configuring logging infrastructure.
+- **Real service instances** -- where possible, tests use actual service implementations (e.g., `MenuAnalyzer`, `CalendarHtmlGenerator`) rather than mocks, since these are pure functions with no external dependencies.
+
+### Coverage Strategy
+
+Tests focus on business logic correctness rather than UI behavior:
+
+| Area | Key Scenarios |
+|---|---|
+| Menu analysis | Safe/unsafe classification, allergen flagging, not-preferred exclusion, favorite marking, no-school detection, multi-plan handling |
+| HTML generation | Output structure, theme application, layout modes, past-day marking, day labels, share footer QR codes |
+| Settings | Default values, round-trip persistence, graceful degradation |
+| CMS parsing | Regex pattern validation against known HTML structure, label pattern matching |
+| Models | Computed property correctness (IsNoSchool, AnyLineSafe, HasMenu) |
+| Themes | Count verification, category distribution, auto-suggestion coverage |
+
+### CI Integration
+
+The `dotnet test` step runs between build and publish in `.github/workflows/dotnet.yml`, ensuring tests pass before artifacts are published.

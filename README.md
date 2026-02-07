@@ -1,7 +1,7 @@
 # School Lunch Menu Calendar Generator
 
-[![.NET Build](https://github.com/YOUR_USERNAME/school-lunch-menu/actions/workflows/dotnet.yml/badge.svg)](https://github.com/YOUR_USERNAME/school-lunch-menu/actions/workflows/dotnet.yml)
-[![Swift Build](https://github.com/YOUR_USERNAME/school-lunch-menu/actions/workflows/swift.yml/badge.svg)](https://github.com/YOUR_USERNAME/school-lunch-menu/actions/workflows/swift.yml)
+[![.NET Build](https://github.com/astoltz/school-lunch-menu/actions/workflows/dotnet.yml/badge.svg)](https://github.com/astoltz/school-lunch-menu/actions/workflows/dotnet.yml)
+[![Swift Build](https://github.com/astoltz/school-lunch-menu/actions/workflows/swift.yml/badge.svg)](https://github.com/astoltz/school-lunch-menu/actions/workflows/swift.yml)
 
 A multi-platform desktop application that generates allergen-aware, printable lunch calendars for any school in the LINQ Connect system. Available for both Windows (WPF/.NET) and macOS (SwiftUI), it fetches menu data from the LINQ Connect API, analyzes each entree for allergen safety, and produces a color-coded HTML calendar designed for easy scanning and printing. Defaults are pre-configured for Lakeville Area Schools.
 
@@ -22,6 +22,7 @@ A multi-platform desktop application that generates allergen-aware, printable lu
 - **Forced home days** -- per-session configurable weekdays that always show a "From Home" badge, regardless of safe options.
 - **Persisted settings** -- selected allergens, forced home days, not-preferred/favorite foods, theme, layout mode, plan icons/order, and holiday overrides are saved to a JSON file and restored on next launch.
 - **Dynamic school support** -- enter any LINQ Connect identifier code to look up a district and its buildings. All menu plans are discovered dynamically.
+- **About dialog** -- Help > About (Windows) or App > About (macOS) shows version, git commit/branch, credits for data sources, and project links.
 
 ## Screenshots
 
@@ -177,9 +178,25 @@ The macOS version uses:
 - URLSession for networking
 - WebKit for HTML preview
 
+## Testing
+
+The Windows project includes a comprehensive xUnit test suite:
+
+```bash
+dotnet test tests/SchoolLunchMenu.Tests/SchoolLunchMenu.Tests.csproj
+```
+
+Tests cover:
+- **MenuAnalyzer** -- allergen safety, not-preferred, favorites, no-school days, multi-plan analysis
+- **CalendarHtmlGenerator** -- HTML output, themes, grid mode, past days, day labels, share footer
+- **SettingsService** -- default settings, round-trip persistence
+- **DayLabelFetchService** -- CMS HTML parsing regex patterns
+- **ProcessedDay** -- computed properties (IsNoSchool, AnyLineSafe, HasMenu)
+- **CalendarThemes** -- 21 themes, categories, auto-suggestion coverage
+
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ## Contributing
 

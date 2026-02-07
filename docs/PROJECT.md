@@ -34,8 +34,10 @@ The application follows **WPF + MVVM + Dependency Injection**:
 ### Views
 | File | Purpose |
 |---|---|
-| `MainWindow.xaml` | WPF layout: 300px left sidebar (school lookup, month/year selectors, session selector, categorized theme dropdown with headers, collapsible allergen filter, not-preferred/favorite checklists, forced home days, collapsible holiday icons editor, day layout mode selector with show-unsafe-lines option, plan icons/reorder/edit-mode labels, cross-out past days checkbox, share link on calendar checkbox, collapsible day labels editor with corner/start-date/entries/Fetch from CMS button, action buttons), right pane (WebBrowser preview, status bar with +/− zoom buttons, Open in Browser button, and View Source button). Default size 1100×800, opens maximized. App icon via `Icon="Assets/logo.ico"`. |
-| `MainWindow.xaml.cs` | Code-behind: wires DataContext, navigates WebBrowser on HTML change, handles drag-drop for HAR files, plan label TextBox auto-focus/select-all on edit mode enter, Enter key to confirm label edit |
+| `MainWindow.xaml` | WPF layout: DockPanel with Help menu bar, 300px left sidebar (school lookup, month/year selectors, session selector, categorized theme dropdown with headers, collapsible allergen filter, not-preferred/favorite checklists, forced home days, collapsible holiday icons editor, day layout mode selector with show-unsafe-lines option, plan icons/reorder/edit-mode labels, cross-out past days checkbox, share link on calendar checkbox, collapsible day labels editor with corner/start-date/entries/Fetch from CMS button, action buttons), right pane (WebBrowser preview, status bar with +/− zoom buttons, Open in Browser button, and View Source button). Default size 1100×800, opens maximized. App icon via `Icon="Assets/logo.ico"`. |
+| `MainWindow.xaml.cs` | Code-behind: wires DataContext, navigates WebBrowser on HTML change, handles drag-drop for HAR files, plan label TextBox auto-focus/select-all on edit mode enter, Enter key to confirm label edit, About click handler |
+| `AboutWindow.xaml` | About dialog: app icon, name, version, git commit/branch info, credits (LINQ Connect, ISD 194 CMS Calendar, GitHub), MIT license mention, clickable hyperlinks, OK button |
+| `AboutWindow.xaml.cs` | Code-behind: parses `AssemblyInformationalVersionAttribute` for version/commit/branch, hyperlink navigation via `Process.Start` |
 | `Converters/BoolToVisibilityConverter.cs` | `bool` to `Visibility`: true=Visible, false=Collapsed |
 | `Converters/BoolToCollapsedConverter.cs` | Inverse `bool` to `Visibility`: true=Collapsed, false=Visible (used for view/edit mode toggle) |
 | `Converters/NullToVisibilityConverter.cs` | `null` to `Visible`/`Collapsed` for preview placeholder vs. WebBrowser |
@@ -78,6 +80,17 @@ The application follows **WPF + MVVM + Dependency Injection**:
 | `Services/DayLabelFetchService.cs` | Scrapes Red/White Day entries from the ISD194 Finalsite CMS calendar HTML using source-generated regex. Typed `HttpClient` via DI. |
 | `Services/ISettingsService.cs` | Interface for settings and cache persistence |
 | `Services/SettingsService.cs` | Reads/writes `settings.json` and `menu-cache.json` next to the executable |
+
+### Tests
+| File | Purpose |
+|---|---|
+| `tests/SchoolLunchMenu.Tests/SchoolLunchMenu.Tests.csproj` | xUnit test project with FluentAssertions, NSubstitute. Targets `net10.0-windows`. |
+| `tests/SchoolLunchMenu.Tests/Services/MenuAnalyzerTests.cs` | Tests for `MenuAnalyzer`: safe/unsafe entrees, allergen flagging, not-preferred, favorites, no-school days, multi-plan, session matching |
+| `tests/SchoolLunchMenu.Tests/Services/CalendarHtmlGeneratorTests.cs` | Tests for `CalendarHtmlGenerator`: month title, safe items, favorites, home badge, themes, grid mode, past days, day labels, share footer, self-contained HTML |
+| `tests/SchoolLunchMenu.Tests/Services/SettingsServiceTests.cs` | Tests for `SettingsService`: default load, round-trip save/load, default values |
+| `tests/SchoolLunchMenu.Tests/Services/DayLabelFetchServiceTests.cs` | Tests for `DayLabelFetchService`: regex parsing of CMS HTML, label pattern matching, 0-indexed months |
+| `tests/SchoolLunchMenu.Tests/Models/ProcessedDayTests.cs` | Tests for `ProcessedDay`: IsNoSchool, HasSpecialNote, AnyLineSafe, HasMenu computed properties |
+| `tests/SchoolLunchMenu.Tests/Models/CalendarThemeTests.cs` | Tests for `CalendarThemes`: 21 themes, categories, auto-suggestion, required properties |
 
 ### Assets
 | File | Purpose |
