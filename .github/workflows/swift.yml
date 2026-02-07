@@ -3,6 +3,7 @@ name: Swift Build
 on:
   push:
     branches: [master, main]
+    tags: ['v*']
   pull_request:
     branches: [master, main]
 
@@ -24,8 +25,13 @@ jobs:
         run: |
           cd school-lunch-menu.Mac
 
-          # Get version info
-          VERSION="1.0.0"
+          # Get version from tag (v1.2.0 → 1.2.0) or fall back to csproj
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            VERSION=$(grep '<Version>' ../school-lunch-menu.Windows/SchoolLunchMenu.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/')
+            VERSION="${VERSION:-0.0.0}"
+          fi
           GIT_COMMIT="${GITHUB_SHA::7}"
           GIT_BRANCH="${GITHUB_REF_NAME}"
           BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")

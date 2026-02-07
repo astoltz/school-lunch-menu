@@ -3,6 +3,7 @@ name: .NET Build
 on:
   push:
     branches: [master, main]
+    tags: ['v*']
   pull_request:
     branches: [master, main]
 
@@ -22,12 +23,27 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          $ref = "${{ github.ref }}"
+          if ($ref -match '^refs/tags/v(.+)$') {
+            $version = $Matches[1]
+          } else {
+            # Read version from csproj as fallback
+            [xml]$proj = Get-Content school-lunch-menu.Windows/SchoolLunchMenu.csproj
+            $version = $proj.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+            if (-not $version) { $version = "0.0.0" }
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
       - name: Restore dependencies
         run: dotnet restore school-lunch-menu.Windows/SchoolLunchMenu.csproj -r win-x64
 
       - name: Build
         run: |
-          $version = "1.0.0"
+          $version = "${{ steps.version.outputs.VERSION }}"
           $gitCommit = "${{ github.sha }}".Substring(0, 7)
           $gitBranch = "${{ github.ref_name }}"
           $buildNumber = "${{ github.run_number }}"
@@ -45,7 +61,7 @@ jobs:
 
       - name: Publish
         run: |
-          $version = "1.0.0"
+          $version = "${{ steps.version.outputs.VERSION }}"
           $gitCommit = "${{ github.sha }}".Substring(0, 7)
           $gitBranch = "${{ github.ref_name }}"
           $buildNumber = "${{ github.run_number }}"
