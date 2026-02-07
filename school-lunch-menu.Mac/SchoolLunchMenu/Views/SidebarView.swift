@@ -597,6 +597,16 @@ struct DayLabelsSection: View {
 
     private var dayLabelControls: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Button(action: {
+                Task {
+                    await viewModel.fetchDayLabels()
+                }
+            }) {
+                Label("Fetch from CMS", systemImage: "arrow.down.circle")
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.isBusy)
+
             Picker("Corner", selection: $viewModel.dayLabelCorner) {
                 ForEach(MainViewModel.dayLabelCornerOptions, id: \.self) { corner in
                     Text(corner.replacingOccurrences(of: "Top", with: "Top ").replacingOccurrences(of: "Bottom", with: "Bottom ")).tag(corner)

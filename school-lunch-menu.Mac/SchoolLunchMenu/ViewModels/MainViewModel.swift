@@ -19,6 +19,7 @@ class MainViewModel: ObservableObject {
     private let menuAnalyzer = MenuAnalyzer()
     private let calendarGenerator = CalendarHtmlGenerator()
     private let harFileService = HarFileService()
+    private let dayLabelFetchService = DayLabelFetchService()
 
     // MARK: - Cached Responses
 
@@ -796,6 +797,64 @@ class MainViewModel: ObservableObject {
     func removeDayLabel(_ entry: DayLabelEntry) {
         dayLabelEntries.removeAll { $0.id == entry.id }
         scheduleSettingsSave()
+    }
+
+    /// Fetches day labels from the ISD 194 CMS calendar page and populates the day label entries.
+    func fetchDayLabels() async {
+        guard !isBusy else { return }
+
+        isBusy = true
+        statusText = "Fetching day labels from CMS..."
+
+        do {
+            let result = try await dayLabelFetchService.fetch()
+
+            guard !result.entries.isEmpty else {
+                statusText = "No day labels found on the CMS calendar page."
+                isBusy = false
+                return
+            }
+
+            // Map labels to colors
+            let colorMap: [String: String] = [
+                "red": "#dc3545",
+                "white": "#adb5bd",
+                "blue": "#0d6efd",
+                "gold": "#ffc107",
+                "green": "#198754",
+                "silver": "#adb5bd",
+                "black": "#212529",
+                "orange": "#fd7e14",
+                "purple": "#6f42c1"
+            ]
+
+            // Build new day label entries from distinct labels
+            dayLabelEntries.removeAll()
+            for label in result.distinctLabels {
+                let entry = DayLabelEntry()
+                // Strip " Day" suffix for compact display
+                let compactLabel = label.replacingOccurrences(of: " Day", with: "", options: .caseInsensitive)
+                entry.label = compactLabel
+                entry.color = colorMap[compactLabel.lowercased()] ?? "#6c757d"
+                entry.onChange = { [weak self] in self?.scheduleSettingsSave() }
+                dayLabelEntries.append(entry)
+            }
+
+            // Set start date to first entry's date
+            if let first = result.entries.first,
+               let year = first.date.year, let month = first.date.month, let day = first.date.day {
+                dayLabelStartDate = "\(month)/\(day)/\(year)"
+            }
+
+            scheduleSettingsSave()
+            statusText = "Loaded \(result.entries.count) day label entries (\(result.distinctLabels.joined(separator: ", ")))."
+            logger.info("Fetched \(result.entries.count) day labels from CMS")
+        } catch {
+            logger.error("Failed to fetch day labels: \(error.localizedDescription)")
+            statusText = "Error fetching day labels: \(error.localizedDescription)"
+        }
+
+        isBusy = false
     }
 
     // MARK: - Plan Label Methods
