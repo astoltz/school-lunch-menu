@@ -29,6 +29,7 @@
 		00000001230000000018 /* MenuAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000018 /* MenuAnalyzer.swift */; };
 		00000001230000000019 /* CalendarHtmlGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000019 /* CalendarHtmlGenerator.swift */; };
 		00000001230000000020 /* HarFileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000020 /* HarFileService.swift */; };
+		00000001230000000025 /* DayLabelFetchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000001210000000025 /* DayLabelFetchService.swift */; };
 		00000001230000000021 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000001210000000021 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +55,7 @@
 		00000001210000000018 /* MenuAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuAnalyzer.swift; sourceTree = "<group>"; };
 		00000001210000000019 /* CalendarHtmlGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarHtmlGenerator.swift; sourceTree = "<group>"; };
 		00000001210000000020 /* HarFileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarFileService.swift; sourceTree = "<group>"; };
+		00000001210000000025 /* DayLabelFetchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLabelFetchService.swift; sourceTree = "<group>"; };
 		00000001210000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		00000001210000000022 /* SchoolLunchMenu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SchoolLunchMenu.entitlements; sourceTree = "<group>"; };
 		00000001210000000023 /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				00000001210000000018 /* MenuAnalyzer.swift */,
 				00000001210000000019 /* CalendarHtmlGenerator.swift */,
 				00000001210000000020 /* HarFileService.swift */,
+				00000001210000000025 /* DayLabelFetchService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -265,6 +268,7 @@
 				00000001230000000018 /* MenuAnalyzer.swift in Sources */,
 				00000001230000000019 /* CalendarHtmlGenerator.swift in Sources */,
 				00000001230000000020 /* HarFileService.swift in Sources */,
+				00000001230000000025 /* DayLabelFetchService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
