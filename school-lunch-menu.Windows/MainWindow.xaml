@@ -24,7 +24,14 @@
         <CommandBinding Command="{x:Static ApplicationCommands.Close}" Executed="OnClose" />
     </Window.CommandBindings>
 
-    <Grid Margin="12">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About School Lunch Menu" Click="OnAboutClick" />
+            </MenuItem>
+        </Menu>
+
+        <Grid Margin="12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300" />
             <ColumnDefinition Width="*" />
@@ -569,4 +576,5 @@
             </Border>
         </Grid>
     </Grid>
+    </DockPanel>
 </Window>

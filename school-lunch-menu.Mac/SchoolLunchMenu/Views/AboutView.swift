@@ -35,6 +35,32 @@ struct AboutView: View {
             Divider()
                 .frame(width: 200)
 
+            // Credits
+            VStack(spacing: 6) {
+                Text("Credits")
+                    .font(.headline)
+
+                Link("Menu data from LINQ Connect",
+                     destination: URL(string: "https://linqconnect.com")!)
+                    .font(.caption)
+
+                Link("Day labels from ISD 194 CMS Calendar",
+                     destination: URL(string: "https://cms.isd194.org/news-and-events/calendar")!)
+                    .font(.caption)
+
+                Link("GitHub Project Page",
+                     destination: URL(string: "https://github.com/astoltz/school-lunch-menu")!)
+                    .font(.caption)
+
+                Text("Licensed under the MIT License")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 2)
+            }
+
+            Divider()
+                .frame(width: 200)
+
             // Description
             Text("Generate printable school lunch calendars\nwith allergen filtering and favorites.")
                 .multilineTextAlignment(.center)
@@ -42,7 +68,7 @@ struct AboutView: View {
                 .font(.caption)
 
             // Copyright
-            Text("© 2024-2025")
+            Text("\u{00A9} 2024-2026 astoltz")
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .padding(.top, 10)

@@ -60,6 +60,12 @@ public partial class MainWindow : Window
         Close();
     }
 
+    private void OnAboutClick(object sender, RoutedEventArgs e)
+    {
+        var about = new AboutWindow { Owner = this };
+        about.ShowDialog();
+    }
+
     private void OnDragOver(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
