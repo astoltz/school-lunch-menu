@@ -111,7 +111,7 @@ public partial class DayLabelFetchService : IDayLabelFetchService
     private static partial Regex EventTitleRegex();
 
     // Matches day label patterns like "Red Day", "White Day"
-    [GeneratedRegex(@"^(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|Day\s*[A-Z]|[A-Z])\s*Day$",
+    [GeneratedRegex(@"^(?:(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|[A-Z])\s*Day|Day\s*[A-Z])$",
         RegexOptions.IgnoreCase)]
     private static partial Regex DayLabelPattern();
 }

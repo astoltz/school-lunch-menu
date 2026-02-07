@@ -65,7 +65,7 @@ dotnet publish school-lunch-menu.Windows/SchoolLunchMenu.csproj \
   -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-**Note:** Tests target `net10.0-windows` and require Windows Desktop runtime. They will not run on macOS or Linux.
+**Note:** Tests target `net10.0-windows` and require Windows Desktop runtime. They will not run on macOS or Linux. **From WSL, use `dotnet.exe` (the Windows host binary) to build, test, and publish** — the Linux `dotnet` CLI lacks the Windows Desktop workload.
 
 ## Project Structure
 

@@ -11,6 +11,8 @@ public class SettingsServiceTests : IDisposable
     private readonly string _tempDir;
     private readonly SettingsService _service;
 
+    private readonly string _settingsPath;
+
     public SettingsServiceTests()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), "SchoolLunchMenuTests", Guid.NewGuid().ToString());
@@ -19,12 +21,19 @@ public class SettingsServiceTests : IDisposable
         // SettingsService uses AppContext.BaseDirectory; we'll test the actual service
         // by creating a helper that uses a custom path
         _service = new SettingsService(NullLogger<SettingsService>.Instance);
+
+        // Clean up any settings file left by prior test runs
+        _settingsPath = Path.Combine(AppContext.BaseDirectory, "settings.json");
+        if (File.Exists(_settingsPath))
+            File.Delete(_settingsPath);
     }
 
     public void Dispose()
     {
         try
         {
+            if (File.Exists(_settingsPath))
+                File.Delete(_settingsPath);
             if (Directory.Exists(_tempDir))
                 Directory.Delete(_tempDir, true);
         }

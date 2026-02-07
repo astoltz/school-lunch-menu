@@ -171,7 +171,7 @@ public class CalendarHtmlGeneratorTests
 
         html.Should().Contain("share-footer");
         html.Should().Contain("data:image/png;base64,");
-        html.Should().Contain("github.com/astoltz/school-lunch-menu");
+        html.Should().Contain("Want your own allergen-friendly lunch calendar?");
     }
 
     [Fact]

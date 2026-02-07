@@ -74,7 +74,7 @@ struct DayLabelFetchService {
         }
 
         // Day label pattern: "Red Day", "White Day", etc.
-        let labelPattern = #"^(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|Day\s*[A-Z]|[A-Z])\s*Day$"#
+        let labelPattern = #"^(?:(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|[A-Z])\s*Day|Day\s*[A-Z])$"#
         guard let labelRegex = try? NSRegularExpression(pattern: labelPattern, options: .caseInsensitive) else {
             return results
         }

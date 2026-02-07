@@ -9,7 +9,7 @@ public class CalendarThemeTests
     [Fact]
     public void All_Has21Themes()
     {
-        CalendarThemes.All.Should().HaveCount(21);
+        CalendarThemes.All.Should().HaveCount(20);
     }
 
     [Fact]

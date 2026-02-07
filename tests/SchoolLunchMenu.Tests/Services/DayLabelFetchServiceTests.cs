@@ -38,7 +38,7 @@ public class DayLabelFetchServiceTests
             System.Text.RegularExpressions.RegexOptions.Singleline);
 
         var labelPattern = new System.Text.RegularExpressions.Regex(
-            @"^(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|Day\s*[A-Z]|[A-Z])\s*Day$",
+            @"^(?:(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|[A-Z])\s*Day|Day\s*[A-Z])$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         var dateMatches = datePattern.Matches(html);
@@ -59,7 +59,7 @@ public class DayLabelFetchServiceTests
     public void LabelPattern_MatchesKnownLabels()
     {
         var labelPattern = new System.Text.RegularExpressions.Regex(
-            @"^(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|Day\s*[A-Z]|[A-Z])\s*Day$",
+            @"^(?:(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|[A-Z])\s*Day|Day\s*[A-Z])$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         labelPattern.IsMatch("Red Day").Should().BeTrue();
@@ -76,7 +76,7 @@ public class DayLabelFetchServiceTests
     public void LabelPattern_RejectsNonLabels()
     {
         var labelPattern = new System.Text.RegularExpressions.Regex(
-            @"^(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|Day\s*[A-Z]|[A-Z])\s*Day$",
+            @"^(?:(?:Red|White|Blue|Gold|Green|Silver|Black|Orange|Purple|[A-Z])\s*Day|Day\s*[A-Z])$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         labelPattern.IsMatch("Staff Development Day").Should().BeFalse();
@@ -109,7 +109,7 @@ public class DayLabelFetchServiceTests
         foreach (var (day, year, month, title) in entries)
         {
             sb.AppendLine($@"<div class=""fsCalendarDate"" data-day=""{day}"" data-year=""{year}"" data-month=""{month}"">");
-            sb.AppendLine($@"  <div class=""fsCalendarEventTitle""><a title=""{title}"" href=""#"">{title}</a></div>");
+            sb.AppendLine($@"  <div class=""fsCalendarEventTitle"" title=""{title}""><a href=""#"">{title}</a></div>");
             sb.AppendLine("</div>");
         }
 
