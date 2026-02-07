@@ -40,6 +40,9 @@ jobs:
             -p:FileVersion=$version.$buildNumber `
             -p:InformationalVersion="$version+$gitCommit ($gitBranch)"
 
+      - name: Test
+        run: dotnet test tests/SchoolLunchMenu.Tests/SchoolLunchMenu.Tests.csproj --configuration ${{ matrix.configuration }} --no-build --verbosity normal
+
       - name: Publish
         run: |
           $version = "1.0.0"
