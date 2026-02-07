@@ -1,0 +1,18 @@
+<Project>
+  <!-- Inject git commit info into InformationalVersion for local dev builds.
+       CI overrides via -p:InformationalVersion="1.0.0+sha (branch)" in dotnet.yml. -->
+  <Target Name="SetGitSourceRevisionId"
+          BeforeTargets="GetAssemblyVersion"
+          Condition="'$(SourceRevisionId)' == ''">
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit" />
+    </Exec>
+    <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch" />
+    </Exec>
+    <PropertyGroup Condition="'$(GitCommit)' != ''">
+      <SourceRevisionId>$(GitCommit)</SourceRevisionId>
+      <InformationalVersion>$(Version)+$(GitCommit) ($(GitBranch))</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

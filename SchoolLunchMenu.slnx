@@ -2,4 +2,7 @@
   <Folder Name="/Windows/">
     <Project Path="school-lunch-menu.Windows/SchoolLunchMenu.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SchoolLunchMenu.Tests/SchoolLunchMenu.Tests.csproj" />
+  </Folder>
 </Solution>

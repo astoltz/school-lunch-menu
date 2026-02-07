@@ -10,6 +10,8 @@
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <LangVersion>14</LangVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Version>1.0.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
